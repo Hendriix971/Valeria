@@ -1,0 +1,1806 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Valeria Faux Multi - Base</title>
+  <style>
+    :root {
+      --primary: #c0392b;
+      --secondary: #f1c40f;
+      --bg: #0a0a0a;
+      --text: #ecf0f1;
+      --panel: #1e272e;
+      --accent: #27ae60;
+      --border: #d35400;
+      --muted: #7f8c8d;
+      --mana: #2980b9;
+      --purple: #8e44ad;
+    }
+    * { box-sizing: border-box; }
+    body {
+      font-family: 'Garamond', 'Georgia', serif;
+      background: radial-gradient(circle at top, #111 0%, #050505 100%);
+      color: var(--text);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      margin: 0;
+      overflow: hidden;
+    }
+    @keyframes shake {
+      0% { transform: translate(1px, 1px) rotate(0deg); }
+      10% { transform: translate(-2px, -2px) rotate(-1deg); }
+      20% { transform: translate(-3px, 0px) rotate(1deg); }
+      30% { transform: translate(3px, 2px) rotate(0deg); }
+      40% { transform: translate(1px, -1px) rotate(1deg); }
+      50% { transform: translate(-1px, 2px) rotate(-1deg); }
+      60% { transform: translate(-3px, 1px) rotate(0deg); }
+      70% { transform: translate(3px, 1px) rotate(-1deg); }
+      80% { transform: translate(-1px, -1px) rotate(1deg); }
+      90% { transform: translate(1px, 2px) rotate(0deg); }
+      100% { transform: translate(1px, -2px) rotate(-1deg); }
+    }
+    .shake { animation: shake 0.42s; }
+    .hidden { display: none !important; }
+
+    #game-wrapper {
+      width: 96%;
+      max-width: 1320px;
+      background: var(--panel);
+      border: 5px double var(--border);
+      border-radius: 18px;
+      padding: 22px;
+      box-shadow: 0 0 50px rgba(0,0,0,0.85);
+      position: relative;
+    }
+    .header {
+      text-align: center;
+      border-bottom: 2px solid var(--border);
+      margin-bottom: 18px;
+      padding-bottom: 10px;
+    }
+    .header h1 {
+      color: var(--secondary);
+      margin: 0;
+      font-size: 2.4em;
+      text-shadow: 2px 2px #000;
+      letter-spacing: 1px;
+    }
+    .subtitle {
+      margin-top: 6px;
+      color: #d7ccc8;
+      font-size: 0.95rem;
+    }
+
+    .setup-screen {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 16px;
+      max-width: 700px;
+      margin: 0 auto;
+    }
+    .setup-card, .panel, .side-panel, .log-area, .modal-card {
+      background: rgba(0,0,0,0.35);
+      border: 2px solid rgba(211,84,0,0.55);
+      border-radius: 12px;
+      padding: 16px;
+    }
+    .setup-card h2, .panel h2, .side-panel h2, .modal-card h2 {
+      margin-top: 0;
+      color: var(--secondary);
+      font-size: 1.35rem;
+      text-align: center;
+      border-bottom: 1px solid rgba(243, 156, 18, 0.35);
+      padding-bottom: 8px;
+    }
+
+    .party-builder {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      max-height: 360px;
+      overflow-y: auto;
+    }
+    .party-slot {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      background: rgba(255,255,255,0.05);
+      border-radius: 10px;
+      padding: 12px;
+      border: 1px solid transparent;
+    }
+    .party-slot .slot-left {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      min-width: 0;
+    }
+    .party-emoji {
+      width: 46px;
+      height: 46px;
+      border-radius: 10px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      background: rgba(255,255,255,0.06);
+      font-size: 1.7rem;
+      border: 1px solid rgba(255,255,255,0.08);
+      flex-shrink: 0;
+    }
+    .slot-info { min-width: 0; }
+    .slot-name {
+      font-weight: bold;
+      color: var(--secondary);
+      font-size: 1.05rem;
+    }
+    .slot-meta {
+      color: #d7ccc8;
+      font-size: 0.9rem;
+    }
+
+    .class-btn, .action-btn, .choice-btn, .small-btn, .slot-btn {
+      padding: 12px;
+      font-size: 1rem;
+      cursor: pointer;
+      background: linear-gradient(to bottom, #d35400, #e67e22);
+      border: 1px solid #000;
+      border-radius: 8px;
+      color: white;
+      font-weight: bold;
+      transition: 0.2s ease;
+    }
+    .class-btn:hover, .action-btn:hover, .choice-btn:hover, .small-btn:hover, .slot-btn:hover {
+      filter: brightness(1.15);
+      transform: translateY(-2px);
+    }
+    .class-btn:disabled, .action-btn:disabled, .choice-btn:disabled, .small-btn:disabled, .slot-btn:disabled {
+      opacity: 0.45;
+      cursor: not-allowed;
+      transform: none;
+      filter: none;
+    }
+    .slot-btn {
+      padding: 8px 12px;
+      font-size: 0.86rem;
+    }
+    .setup-actions {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+
+    .modal-overlay {
+      position: absolute;
+      inset: 0;
+      background: rgba(0,0,0,0.68);
+      z-index: 90;
+      display: none;
+    }
+    .modal-overlay.show { display: block; }
+    .modal {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: min(92vw, 720px);
+      transform: translate(-50%, -50%);
+      z-index: 100;
+      display: none;
+      box-shadow: 0 0 100px #000;
+    }
+    .modal.show { display: block; }
+    .creation-grid {
+      display: grid;
+      grid-template-columns: 1.1fr 0.9fr;
+      gap: 18px;
+    }
+    .field-label {
+      display: block;
+      margin-bottom: 8px;
+      color: #f7d794;
+      font-weight: bold;
+    }
+    input[type="text"] {
+      width: 100%;
+      padding: 12px 14px;
+      border-radius: 8px;
+      border: 1px solid #555;
+      background: #111;
+      color: white;
+      font-size: 1rem;
+      margin-bottom: 16px;
+    }
+    .class-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+      margin-bottom: 18px;
+    }
+    .class-btn.active {
+      outline: 2px solid var(--secondary);
+      box-shadow: 0 0 14px rgba(241, 196, 15, 0.3);
+      filter: brightness(1.05);
+    }
+    .class-emoji {
+      display: block;
+      font-size: 2rem;
+      margin-bottom: 6px;
+    }
+    .points-box {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: rgba(241, 196, 15, 0.08);
+      border: 1px solid rgba(241, 196, 15, 0.35);
+      border-radius: 10px;
+      padding: 10px 14px;
+      margin-bottom: 12px;
+      font-size: 1rem;
+    }
+    .stat-list {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      margin-bottom: 18px;
+    }
+    .stat-row {
+      display: grid;
+      grid-template-columns: 1.4fr auto auto auto;
+      align-items: center;
+      gap: 8px;
+      background: rgba(255,255,255,0.04);
+      border-radius: 8px;
+      padding: 10px 12px;
+    }
+    .stat-desc {
+      color: #c8d6e5;
+      font-size: 0.9rem;
+      margin-top: 2px;
+    }
+    .stat-value {
+      min-width: 28px;
+      text-align: center;
+      color: var(--secondary);
+      font-weight: bold;
+      font-size: 1.1rem;
+    }
+    .adjust-btn {
+      width: 34px;
+      height: 34px;
+      border-radius: 50%;
+      border: none;
+      cursor: pointer;
+      font-size: 1.1rem;
+      font-weight: bold;
+      color: white;
+      background: #6c5ce7;
+    }
+    .adjust-btn.minus { background: #636e72; }
+    .adjust-btn:disabled { opacity: 0.35; cursor: not-allowed; }
+    .bonus-list {
+      margin: 0;
+      padding-left: 20px;
+      line-height: 1.45;
+      color: #dfe6e9;
+    }
+
+    .game-screen {
+      display: grid;
+      grid-template-columns: 145px 1fr 285px;
+      gap: 16px;
+      align-items: start;
+    }
+    .team-scroll {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      max-height: 640px;
+      overflow-y: auto;
+      padding-right: 4px;
+    }
+    .team-card {
+      background: rgba(255,255,255,0.04);
+      border-radius: 10px;
+      padding: 10px;
+      cursor: pointer;
+      border: 1px solid transparent;
+      text-align: center;
+      transition: 0.2s ease;
+      position: relative;
+    }
+    .team-card.selected {
+      border-color: var(--secondary);
+      box-shadow: 0 0 10px rgba(241,196,15,0.2);
+    }
+    .team-card.active-turn {
+      border-color: #74b9ff;
+      box-shadow: 0 0 12px rgba(116,185,255,0.25);
+      background: rgba(116,185,255,0.08);
+    }
+    .team-card.dead {
+      opacity: 0.45;
+      filter: grayscale(1);
+    }
+    .team-card .small-emoji {
+      font-size: 1.9rem;
+      margin-bottom: 6px;
+    }
+    .team-card .small-name {
+      font-weight: bold;
+      font-size: 0.9rem;
+      color: var(--secondary);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .team-card .small-hp {
+      margin-top: 4px;
+      font-size: 0.8rem;
+      color: #d7ccc8;
+    }
+
+    .main-center {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+    .battlefield {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+      min-height: 280px;
+    }
+    .visual-card {
+      background: #000;
+      border: 2px solid var(--border);
+      border-radius: 12px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      position: relative;
+      overflow: hidden;
+      padding: 16px;
+      min-height: 280px;
+    }
+    .visual-card .sprite {
+      font-size: 5rem;
+      line-height: 1;
+      margin-bottom: 10px;
+    }
+    .visual-card h3 {
+      margin: 2px 0 6px;
+      font-size: 1.3rem;
+      color: var(--secondary);
+      text-align: center;
+    }
+    .visual-card .subtext {
+      color: #d7ccc8;
+      font-size: 0.95rem;
+      text-align: center;
+      margin-bottom: 12px;
+    }
+    .visual-card .bar-wrap {
+      width: 82%;
+    }
+    .status-chip {
+      display: inline-block;
+      margin-top: 8px;
+      padding: 6px 10px;
+      border-radius: 999px;
+      background: rgba(39, 174, 96, 0.18);
+      border: 1px solid rgba(39,174,96,0.35);
+      font-size: 0.88rem;
+    }
+    .bar-label {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.95rem;
+      margin-bottom: 4px;
+    }
+    .health-bar-container, .mana-bar-container, .xp-bar-container {
+      width: 100%;
+      background: #222;
+      border-radius: 999px;
+      overflow: hidden;
+      border: 1px solid rgba(255,255,255,0.2);
+      margin-bottom: 12px;
+    }
+    .health-bar-container { height: 16px; }
+    .mana-bar-container, .xp-bar-container { height: 12px; }
+    .health-bar, .mana-bar, .xp-bar {
+      height: 100%;
+      transition: width 0.35s ease-out;
+    }
+    .health-bar { background: linear-gradient(90deg, #b71c1c, #e74c3c); }
+    .mana-bar { background: linear-gradient(90deg, #1f4ba5, #3498db); }
+    .xp-bar { background: linear-gradient(90deg, #1f8f4d, #2ecc71); }
+    .log-area {
+      height: 330px;
+      overflow-y: auto;
+      font-family: 'Courier New', Courier, monospace;
+      font-size: 0.88rem;
+    }
+    .log-entry {
+      margin-bottom: 7px;
+      line-height: 1.25;
+      border-bottom: 1px solid #222;
+      padding-bottom: 4px;
+    }
+    .critical { color: var(--secondary); font-weight: bold; }
+    .gain { color: var(--accent); }
+    .loss { color: #ff7675; }
+    .info { color: #74b9ff; }
+    .loot { color: #f6e58d; }
+
+    .controls {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 10px;
+    }
+    .action-btn small {
+      display: block;
+      font-size: 0.78rem;
+      opacity: 0.9;
+      margin-top: 4px;
+    }
+
+    .inventory-section-title {
+      font-size: 1rem;
+      color: var(--secondary);
+      font-weight: bold;
+      margin: 4px 0 8px;
+    }
+    .inventory-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      max-height: 220px;
+      overflow-y: auto;
+      margin-bottom: 12px;
+    }
+    .item-row {
+      background: rgba(255,255,255,0.045);
+      border-radius: 8px;
+      padding: 10px;
+      border: 1px solid transparent;
+      cursor: pointer;
+    }
+    .item-row.selected {
+      border-color: var(--secondary);
+      box-shadow: 0 0 10px rgba(241, 196, 15, 0.2);
+    }
+    .item-name {
+      font-weight: bold;
+      color: #f7d794;
+      margin-bottom: 4px;
+    }
+    .item-meta {
+      font-size: 0.86rem;
+      color: #dfe6e9;
+      line-height: 1.25;
+    }
+    .inventory-actions {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+      margin-bottom: 14px;
+    }
+
+    @media (max-width: 1100px) {
+      body { overflow: auto; }
+      #game-wrapper { margin: 14px; }
+      .game-screen, .creation-grid, .battlefield, .setup-actions {
+        grid-template-columns: 1fr;
+      }
+      .game-screen { grid-template-columns: 1fr; }
+      .log-area { height: 220px; }
+      .team-scroll { max-height: none; }
+    }
+  
+/* LEVEL UP FIX */
+#levelup-choices {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+  justify-content: center;
+}
+#levelup-modal .modal-card {
+  text-align: center;
+}
+#levelup-text {
+  text-align: center;
+}
+#levelup-choices .class-btn {
+  width: 100%;
+}
+
+
+/* LEVEL UP HERO STYLE */
+.lvlup-hero {
+  display: block;
+  font-size: 26px;
+  font-weight: bold;
+  text-shadow: 0 0 12px rgba(0,0,0,0.8);
+  animation: lvlupPulse 0.8s infinite alternate;
+}
+
+.lvlup-sub {
+  font-size: 16px;
+  color: #ddd;
+}
+
+@keyframes lvlupPulse {
+  from { transform: scale(1); }
+  to { transform: scale(1.08); }
+}
+
+
+/* REST MODAL FIX */
+#rest-modal {
+  width: min(92vw, 380px);
+}
+
+#rest-modal .modal-card {
+  text-align: center;
+  padding: 22px 20px;
+}
+
+#rest-text {
+  text-align: center;
+  margin: 0;
+}
+
+
+/* TURN POPUP */
+.turn-popup {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: rgba(0,0,0,0.75);
+  font-size: 48px;
+  font-weight: bold;
+  text-align: center;
+  color: #f1c40f;
+  z-index: 200;
+  pointer-events: none;
+  animation: turnFade 1.2s forwards;
+}
+
+.turn-name {
+  color: #f1c40f;
+  text-shadow: 0 0 20px rgba(241,196,15,0.9);
+}
+
+@keyframes turnFade {
+  0% {
+    opacity: 0;
+    transform: scale(0.7);
+  }
+  20% {
+    opacity: 1;
+    transform: scale(1.1);
+  }
+  70% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+}
+
+</style>
+</head>
+<body>
+  <div id="game-wrapper">
+    <div class="header">
+      <h1>VALERIA — FAUX MULTI</h1>
+      <div class="subtitle">Nouvelle base d’équipe, inspirée du solo pour l’UI et de Manus pour les idées mécaniques.</div>
+    </div>
+
+    <div id="setup-screen" class="setup-screen">
+      <div class="setup-card">
+        <h2>Préparer l'équipe</h2>
+        <div id="party-builder" class="party-builder"></div>
+        <div class="setup-actions">
+          <button id="add-hero-btn" class="class-btn">[ + ] Ajouter un personnage</button>
+          <button id="play-btn" class="class-btn">Jouer</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="game-screen" class="game-screen hidden">
+      <div class="side-panel">
+        <h2>Équipe</h2>
+        <div id="team-scroll" class="team-scroll"></div>
+      </div>
+
+      <div class="main-center">
+        <div class="battlefield">
+          <div id="player-card" class="visual-card">
+            <div id="player-battle-emoji" class="sprite">⚔️</div>
+            <h3 id="player-battle-name">Aventurier</h3>
+            <div id="player-battle-sub" class="subtext">Prêt à entrer dans le donjon</div>
+            <div class="bar-wrap">
+              <div class="bar-label"><span>PV</span><span id="player-card-hp">60 / 60</span></div>
+              <div class="health-bar-container"><div id="player-card-hp-bar" class="health-bar"></div></div>
+              <div class="bar-label"><span>Mana</span><span id="player-card-mana">20 / 20</span></div>
+              <div class="mana-bar-container"><div id="player-card-mana-bar" class="mana-bar"></div></div>
+            </div>
+            <div class="status-chip" id="player-status-chip">En attente</div>
+          </div>
+
+          <div id="enemy-card" class="visual-card">
+            <div id="enemy-sprite" class="sprite">🏰</div>
+            <h3 id="enemy-name">Porte du Donjon</h3>
+            <div id="enemy-sub" class="subtext">Une aventure t'attend</div>
+            <div class="bar-wrap">
+              <div class="bar-label"><span>PV</span><span id="enemy-hp-text">—</span></div>
+              <div class="health-bar-container"><div id="enemy-hp-bar" class="health-bar"></div></div>
+            </div>
+            <div class="status-chip" id="enemy-status-chip">Exploration</div>
+          </div>
+        </div>
+
+        <div id="log" class="log-area panel"></div>
+
+        <div id="exploration-controls" class="controls">
+          <button class="action-btn" id="btn-explore">Avancer dans le donjon<small>Déclenche combat, coffre ou piège</small></button>
+          <button class="action-btn" id="btn-rest">Se reposer<small>Attends 10 sec pour restaurer toute l’équipe</small></button>
+        </div>
+
+        <div id="combat-controls" class="controls hidden">
+          <button class="action-btn" id="btn-attack">Attaque normale<small>Planifier pour ce héros</small></button>
+          <button class="action-btn" id="btn-heavy">Attaque puissante<small>Plus forte mais moins précise</small></button>
+          <button class="action-btn" id="btn-block">Encaisser<small>Réduit la prochaine attaque</small></button>
+          <button class="action-btn" id="btn-skill">Compétence de classe<small id="skill-label">Compétence</small></button>
+        </div>
+      </div>
+
+      <div class="side-panel">
+        <h2>Équipement et Sac</h2>
+
+        <div class="inventory-section-title">Équipement du héros affiché</div>
+        <div id="equipment-list" class="inventory-list"></div>
+        <div class="inventory-actions">
+          <button class="small-btn" id="btn-use-equipped" disabled>Utiliser</button>
+          <button class="small-btn" id="btn-equip-equipped" disabled>Équiper</button>
+          <button class="small-btn" id="btn-drop-equipped">Jeter</button>
+        </div>
+
+        <div class="inventory-section-title">Sac partagé</div>
+        <div id="inventory-list" class="inventory-list"></div>
+        <div class="inventory-actions">
+          <button class="small-btn" id="btn-use-item">Utiliser</button>
+          <button class="small-btn" id="btn-equip-item">Équiper</button>
+          <button class="small-btn" id="btn-drop-item">Jeter</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="modal-overlay" class="modal-overlay"></div>
+
+    <div id="creation-modal" class="modal">
+      <div class="modal-card">
+        <h2>Créer un personnage</h2>
+        <div class="creation-grid">
+          <div>
+            <label class="field-label" for="hero-name">Pseudo</label>
+            <input id="hero-name" type="text" maxlength="18" placeholder="Entre ton pseudo" />
+
+            <div class="field-label">Classe</div>
+            <div class="class-grid" id="class-grid"></div>
+
+            <div class="points-box">
+              <span>Points à répartir</span>
+              <strong id="creation-points">10</strong>
+            </div>
+
+            <div class="stat-list" id="creation-stat-list"></div>
+
+            <div class="setup-actions">
+              <button id="cancel-create-btn" class="class-btn">Annuler</button>
+              <button id="confirm-create-btn" class="class-btn">Ajouter</button>
+            </div>
+          </div>
+
+          <div>
+            <div class="panel">
+              <h2>Aperçu</h2>
+              <div class="party-slot" style="margin-bottom:12px;">
+                <div class="slot-left">
+                  <div id="preview-emoji" class="party-emoji">⚔️</div>
+                  <div class="slot-info">
+                    <div id="preview-name" class="slot-name">Aventurier</div>
+                    <div id="preview-class" class="slot-meta">Guerrier</div>
+                  </div>
+                </div>
+              </div>
+              <div class="stats-grid">
+                <div class="mini-stat"><strong>FOR</strong><span id="preview-for">5</span></div>
+                <div class="mini-stat"><strong>RAP</strong><span id="preview-rap">5</span></div>
+                <div class="mini-stat"><strong>CON</strong><span id="preview-con">5</span></div>
+                <div class="mini-stat"><strong>MANA</strong><span id="preview-mana">5</span></div>
+              </div>
+              <ul id="class-bonuses" class="bonus-list"></ul>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+
+    <div id="levelup-modal" class="modal">
+      <div class="modal-card">
+        <h2>Montée de niveau</h2>
+        <p id="levelup-text">Choisis 2 améliorations.</p>
+        <div id="levelup-choices" class="class-grid"></div>
+      </div>
+    </div>
+
+    <div id="rest-modal" class="modal">
+      <div class="modal-card">
+        <h2>🛌</h2>
+        <p id="rest-text">Vous vous reposez.<br>Temps d'attente : <strong>0:10</strong></p>
+      </div>
+    </div>
+    <div id="turn-popup" class="turn-popup hidden"></div>
+  </div>
+
+  <script>
+    const CLASS_DATA = {
+      Guerrier: {
+        emoji: '⚔️',
+        bonuses: ['+2 CON au départ', '+1 FOR au départ', 'Compétence : Coup de bouclier', 'Plus résistant aux dégâts'],
+        baseAdjust: { FOR: 1, CON: 2, RAP: 0, MANA: 0 },
+        skillName: 'Coup de bouclier',
+        skillCost: 8,
+      },
+      Mage: {
+        emoji: '🧙‍♂️',
+        bonuses: ['+3 MANA au départ', '+1 RAP au départ', 'Compétence : Boule de feu', 'Gros dégâts magiques'],
+        baseAdjust: { FOR: 0, CON: 0, RAP: 1, MANA: 3 },
+        skillName: 'Boule de feu',
+        skillCost: 10,
+      },
+      Assassin: {
+        emoji: '🗡️',
+        bonuses: ['+2 RAP au départ', '+1 FOR au départ', 'Compétence : Assassinat', 'Critiques et esquive élevés'],
+        baseAdjust: { FOR: 1, CON: 0, RAP: 2, MANA: 0 },
+        skillName: 'Assassinat',
+        skillCost: 7,
+      }
+    };
+
+    const CREATION = {
+      points: 10,
+      className: 'Guerrier',
+      stats: { FOR: 5, CON: 5, RAP: 5, MANA: 5 }
+    };
+
+    const BESTIARY = [
+      { name: 'Gobelin', hp: 34, dmgMin: 4, dmgMax: 7, xp: 34, sprite: '👺', level: 1 },
+      { name: 'Loup affamé', hp: 30, dmgMin: 5, dmgMax: 8, xp: 36, sprite: '🐺', level: 1 },
+      { name: 'Squelette', hp: 44, dmgMin: 6, dmgMax: 10, xp: 52, sprite: '💀', level: 2 },
+      { name: 'Orc de sang', hp: 68, dmgMin: 8, dmgMax: 13, xp: 88, sprite: '👹', level: 3 },
+      { name: 'Spectre', hp: 85, dmgMin: 10, dmgMax: 15, xp: 120, sprite: '👻', level: 4 },
+      { name: 'Chevalier noir', hp: 110, dmgMin: 12, dmgMax: 18, xp: 170, sprite: '🛡️', level: 5 },
+      { name: 'Dragon ancien', hp: 240, dmgMin: 18, dmgMax: 30, xp: 550, sprite: '🐲', level: 8, boss: true }
+    ];
+
+    const WEAPONS = [
+      { name: 'Dague rouillée', type: 'weapon', slot: 'weapon', atk: 2, rarity: 'Commun', icon: '🗡️' },
+      { name: 'Épée longue', type: 'weapon', slot: 'weapon', atk: 4, rarity: 'Commun', icon: '⚔️' },
+      { name: 'Bâton runique', type: 'weapon', slot: 'weapon', atk: 5, mana: 4, rarity: 'Rare', icon: '🪄' },
+      { name: 'Lame de l’ombre', type: 'weapon', slot: 'weapon', atk: 7, crit: 6, rarity: 'Rare', icon: '🗡️' },
+      { name: 'Claymore royale', type: 'weapon', slot: 'weapon', atk: 9, def: 2, rarity: 'Épique', icon: '⚔️' }
+    ];
+
+    const ARMORS = [
+      { name: 'Tunique renforcée', type: 'armor', slot: 'armor', def: 2, rarity: 'Commun', icon: '🛡️' },
+      { name: 'Armure de cuir', type: 'armor', slot: 'armor', def: 4, evasion: 3, rarity: 'Commun', icon: '🧥' },
+      { name: 'Robe mystique', type: 'armor', slot: 'armor', def: 3, mana: 6, rarity: 'Rare', icon: '🪶' },
+      { name: 'Cotte d’acier', type: 'armor', slot: 'armor', def: 6, rarity: 'Rare', icon: '🛡️' },
+      { name: 'Armure du gardien', type: 'armor', slot: 'armor', def: 8, hp: 20, rarity: 'Épique', icon: '🛡️' }
+    ];
+
+    const GAME = {
+      started: false,
+      party: [],
+      displayHeroIndex: 0,
+      activeHeroIndex: 0,
+      setupSharedBag: [],
+      sharedBag: [],
+      currentEnemy: null,
+      inCombat: false,
+      selectedItemId: null,
+      selectedEquipmentId: null,
+      roomsCleared: 0,
+      pendingActions: [],
+      heroesChosenThisRound: 0,
+      isResolvingRound: false,
+      isResting: false,
+      restInterval: null,
+      pendingLevelUps: [],
+      isLevelingUp: false,
+    };
+
+    const refs = {
+      setupScreen: document.getElementById('setup-screen'),
+      partyBuilder: document.getElementById('party-builder'),
+      addHeroBtn: document.getElementById('add-hero-btn'),
+      playBtn: document.getElementById('play-btn'),
+      gameScreen: document.getElementById('game-screen'),
+      log: document.getElementById('log'),
+      teamScroll: document.getElementById('team-scroll'),
+      playerCard: document.getElementById('player-card'),
+      enemyCard: document.getElementById('enemy-card'),
+      equipmentList: document.getElementById('equipment-list'),
+      inventoryList: document.getElementById('inventory-list'),
+      btnUseItem: document.getElementById('btn-use-item'),
+      btnEquipItem: document.getElementById('btn-equip-item'),
+      btnDropItem: document.getElementById('btn-drop-item'),
+      btnDropEquipped: document.getElementById('btn-drop-equipped'),
+      btnExplore: document.getElementById('btn-explore'),
+      btnRest: document.getElementById('btn-rest'),
+      btnAttack: document.getElementById('btn-attack'),
+      btnHeavy: document.getElementById('btn-heavy'),
+      btnBlock: document.getElementById('btn-block'),
+      btnSkill: document.getElementById('btn-skill'),
+      skillLabel: document.getElementById('skill-label'),
+      creationModal: document.getElementById('creation-modal'),
+      modalOverlay: document.getElementById('modal-overlay'),
+      heroName: document.getElementById('hero-name'),
+      classGrid: document.getElementById('class-grid'),
+      creationStatList: document.getElementById('creation-stat-list'),
+      creationPoints: document.getElementById('creation-points'),
+      previewEmoji: document.getElementById('preview-emoji'),
+      previewName: document.getElementById('preview-name'),
+      previewClass: document.getElementById('preview-class'),
+      previewFor: document.getElementById('preview-for'),
+      previewRap: document.getElementById('preview-rap'),
+      previewCon: document.getElementById('preview-con'),
+      previewMana: document.getElementById('preview-mana'),
+      classBonuses: document.getElementById('class-bonuses'),
+      confirmCreateBtn: document.getElementById('confirm-create-btn'),
+      cancelCreateBtn: document.getElementById('cancel-create-btn'),
+      restModal: document.getElementById('rest-modal'),
+      restText: document.getElementById('rest-text'),
+      levelupModal: document.getElementById('levelup-modal'),
+      levelupText: document.getElementById('levelup-text'),
+      levelupChoices: document.getElementById('levelup-choices'),
+    };
+
+    function uid() { return `${Date.now()}-${Math.random()}`; }
+    function clone(obj) { return JSON.parse(JSON.stringify(obj)); }
+    function roll(min, max) { return Math.floor(Math.random() * (max - min + 1)) + min; }
+
+    function addLog(message, type = '') {
+      const entry = document.createElement('div');
+      entry.className = `log-entry ${type}`.trim();
+      entry.innerHTML = message;
+      refs.log.appendChild(entry);
+      refs.log.scrollTop = refs.log.scrollHeight;
+    }
+
+    function shakeElement(el) {
+      el.classList.remove('shake');
+      void el.offsetWidth;
+      el.classList.add('shake');
+      setTimeout(() => el.classList.remove('shake'), 420);
+    }
+
+    function classAdjustedStats(baseStats, className) {
+      const adjusted = { ...baseStats };
+      const bonus = CLASS_DATA[className].baseAdjust;
+      Object.keys(adjusted).forEach((key) => adjusted[key] += bonus[key] || 0);
+      return adjusted;
+    }
+
+    function getHeroDerived(hero) {
+      const stats = hero.stats;
+      const weapon = hero.equipment.weapon;
+      const armor = hero.equipment.armor;
+      const weaponAtk = weapon?.atk || 0;
+      const weaponMana = weapon?.mana || 0;
+      const weaponCrit = weapon?.crit || 0;
+      const weaponDef = weapon?.def || 0;
+      const armorDef = armor?.def || 0;
+      const armorMana = armor?.mana || 0;
+      const armorHp = armor?.hp || 0;
+      const armorEva = armor?.evasion || 0;
+
+      const maxHp = 52 + stats.CON * 12 + hero.level * 10 + armorHp;
+      const maxMana = 18 + stats.MANA * 8 + hero.level * 4 + weaponMana + armorMana;
+      const atk = Math.max(1, 4 + stats.FOR * 2 + hero.level + weaponAtk);
+      const def = Math.max(0, Math.floor(stats.CON * 0.8) + armorDef + weaponDef);
+      const evasion = Math.min(45, 4 + stats.RAP * 2 + armorEva + (hero.className === 'Assassin' ? 5 : 0));
+      const crit = Math.min(55, 5 + Math.floor(stats.RAP * 1.5) + weaponCrit + (hero.className === 'Assassin' ? 8 : 0));
+      return { maxHp, maxMana, atk, def, evasion, crit };
+    }
+
+    function syncHeroCaps(hero, fillResources = false) {
+      const derived = getHeroDerived(hero);
+      hero.maxHp = derived.maxHp;
+      hero.maxMana = derived.maxMana;
+      if (fillResources) {
+        hero.hp = derived.maxHp;
+        hero.mana = derived.maxMana;
+      } else {
+        hero.hp = Math.min(hero.hp, derived.maxHp);
+        hero.mana = Math.min(hero.mana, derived.maxMana);
+      }
+      return derived;
+    }
+
+    function createStartingGear(className) {
+      const gear = [];
+      if (className === 'Guerrier') gear.push({ name: 'Épée du recrue', type: 'weapon', slot: 'weapon', atk: 3, rarity: 'Départ', icon: '⚔️' });
+      if (className === 'Mage') gear.push({ name: 'Bâton d’apprenti', type: 'weapon', slot: 'weapon', atk: 2, mana: 5, rarity: 'Départ', icon: '🪄' });
+      if (className === 'Assassin') gear.push({ name: 'Dagues jumelles', type: 'weapon', slot: 'weapon', atk: 3, crit: 4, rarity: 'Départ', icon: '🗡️' });
+      gear.push({ name: 'Tenue de voyage', type: 'armor', slot: 'armor', def: 1, rarity: 'Départ', icon: '🛡️' });
+      return gear.map((item) => ({ ...clone(item), id: uid() }));
+    }
+
+    function ensureSetupBag() {
+      if (!GAME.setupSharedBag.length) {
+        GAME.setupSharedBag.push({ id: uid(), name: 'Potion de soin', type: 'consumable', stackable: true, quantity: 3, heal: 35, effectText: 'Restaure 35 PV', icon: '🧪' });
+        GAME.setupSharedBag.push({ id: uid(), name: 'Potion de mana', type: 'consumable', stackable: true, quantity: 2, manaRestore: 30, effectText: 'Restaure 30 mana', icon: '🔵' });
+      }
+    }
+
+    function itemDescription(item) {
+      const bits = [];
+      if (item.atk) bits.push(`+${item.atk} ATK`);
+      if (item.def) bits.push(`+${item.def} DEF`);
+      if (item.hp) bits.push(`+${item.hp} PV max`);
+      if (item.mana) bits.push(`+${item.mana} mana max`);
+      if (item.crit) bits.push(`+${item.crit}% crit`);
+      if (item.evasion) bits.push(`+${item.evasion}% esquive`);
+      if (item.type === 'consumable') bits.push(item.effectText || 'Consommable');
+      return bits.join(' • ');
+    }
+
+    function getDisplayedHero() {
+      return GAME.party[GAME.displayHeroIndex] || null;
+    }
+
+    function getActiveHero() {
+      return GAME.party[GAME.activeHeroIndex] || null;
+    }
+
+    function getAliveHeroes() {
+      return GAME.party.filter((hero) => hero.hp > 0);
+    }
+
+    function getAliveIndexes() {
+      return GAME.party.map((hero, index) => hero.hp > 0 ? index : -1).filter((index) => index !== -1);
+    }
+
+    function renderSetupParty() {
+      ensureSetupBag();
+      refs.partyBuilder.innerHTML = '';
+      if (!GAME.party.length) {
+        refs.partyBuilder.innerHTML = '<div class="party-slot"><div class="slot-left"><div class="party-emoji">[+]</div><div class="slot-info"><div class="slot-name">Aucun personnage</div><div class="slot-meta">Ajoute ton premier membre d’équipe.</div></div></div></div>';
+      } else {
+        GAME.party.forEach((hero, index) => {
+          const slot = document.createElement('div');
+          slot.className = 'party-slot';
+          slot.innerHTML = `
+            <div class="slot-left">
+              <div class="party-emoji">${hero.emoji}</div>
+              <div class="slot-info">
+                <div class="slot-name">${hero.name}</div>
+                <div class="slot-meta">${hero.className} • Ordre ${index + 1}</div>
+              </div>
+            </div>
+            <button class="slot-btn" data-index="${index}">Retirer</button>
+          `;
+          slot.querySelector('button').onclick = () => {
+            GAME.party.splice(index, 1);
+            if (GAME.displayHeroIndex >= GAME.party.length) GAME.displayHeroIndex = Math.max(0, GAME.party.length - 1);
+            renderSetupParty();
+          };
+          refs.partyBuilder.appendChild(slot);
+        });
+      }
+      refs.playBtn.disabled = GAME.party.length === 0;
+    }
+
+    function openCreationModal() {
+      CREATION.points = 10;
+      CREATION.className = 'Guerrier';
+      CREATION.stats = { FOR: 5, CON: 5, RAP: 5, MANA: 5 };
+      refs.heroName.value = '';
+      renderCreation();
+      refs.modalOverlay.classList.add('show');
+      refs.creationModal.classList.add('show');
+    }
+
+    function closeCreationModal() {
+      refs.modalOverlay.classList.remove('show');
+      refs.creationModal.classList.remove('show');
+    }
+
+    function renderCreation() {
+      refs.classGrid.innerHTML = '';
+      Object.keys(CLASS_DATA).forEach((className) => {
+        const btn = document.createElement('button');
+        btn.className = `class-btn ${CREATION.className === className ? 'active' : ''}`;
+        btn.innerHTML = `<span class="class-emoji">${CLASS_DATA[className].emoji}</span>${className}`;
+        btn.onclick = () => { CREATION.className = className; renderCreation(); };
+        refs.classGrid.appendChild(btn);
+      });
+
+      refs.creationStatList.innerHTML = '';
+      ['FOR', 'RAP', 'CON', 'MANA'].forEach((stat) => {
+        const row = document.createElement('div');
+        row.className = 'stat-row';
+        const desc = {
+          FOR: 'augmente les dégâts',
+          RAP: 'augmente esquive et crit',
+          CON: 'augmente les PV',
+          MANA: 'augmente le mana'
+        }[stat];
+        row.innerHTML = `
+          <div>
+            <div><strong>${stat}</strong></div>
+            <div class="stat-desc">${desc}</div>
+          </div>
+          <button class="adjust-btn minus" ${CREATION.stats[stat] <= 1 ? 'disabled' : ''}>−</button>
+          <div class="stat-value">${CREATION.stats[stat]}</div>
+          <button class="adjust-btn" ${CREATION.points <= 0 ? 'disabled' : ''}>+</button>
+        `;
+        const [minusBtn, plusBtn] = row.querySelectorAll('button');
+        minusBtn.onclick = () => {
+          if (CREATION.stats[stat] > 1) { CREATION.stats[stat]--; CREATION.points++; renderCreation(); }
+        };
+        plusBtn.onclick = () => {
+          if (CREATION.points > 0) { CREATION.stats[stat]++; CREATION.points--; renderCreation(); }
+        };
+        refs.creationStatList.appendChild(row);
+      });
+
+      refs.creationPoints.textContent = CREATION.points;
+      const previewStats = classAdjustedStats(CREATION.stats, CREATION.className);
+      refs.previewEmoji.textContent = CLASS_DATA[CREATION.className].emoji;
+      refs.previewName.textContent = refs.heroName.value.trim() || 'Aventurier';
+      refs.previewClass.textContent = CREATION.className;
+      refs.previewFor.textContent = previewStats.FOR;
+      refs.previewRap.textContent = previewStats.RAP;
+      refs.previewCon.textContent = previewStats.CON;
+      refs.previewMana.textContent = previewStats.MANA;
+      refs.classBonuses.innerHTML = CLASS_DATA[CREATION.className].bonuses.map((b) => `<li>${b}</li>`).join('');
+      refs.confirmCreateBtn.disabled = !refs.heroName.value.trim();
+    }
+
+    function addCreatedHero() {
+      const pseudo = refs.heroName.value.trim();
+      if (!pseudo) return;
+      const finalStats = classAdjustedStats(CREATION.stats, CREATION.className);
+      const inventory = createStartingGear(CREATION.className);
+      const hero = {
+        id: uid(),
+        name: pseudo,
+        className: CREATION.className,
+        emoji: CLASS_DATA[CREATION.className].emoji,
+        level: 1,
+        xp: 0,
+        xpNext: 100,
+        stats: finalStats,
+        hp: 1,
+        maxHp: 1,
+        mana: 1,
+        maxMana: 1,
+        inventory,
+        equipment: {
+          weapon: inventory.find((item) => item.slot === 'weapon') || null,
+          armor: inventory.find((item) => item.slot === 'armor') || null,
+        },
+        defending: false,
+      };
+      syncHeroCaps(hero, true);
+      GAME.party.push(hero);
+      closeCreationModal();
+      renderSetupParty();
+    }
+
+
+    function openLevelUpModal(hero) {
+      GAME.isLevelingUp = true;
+      refs.modalOverlay.classList.add('show');
+      refs.levelupModal.classList.add('show');
+      const classColors = {
+  Guerrier: "#e74c3c",
+  Mage: "#3498db",
+  Assassin: "#9b59b6"
+};
+
+const color = classColors[hero.className] || "#f1c40f";
+
+refs.levelupText.innerHTML = `
+  <span class="lvlup-hero" style="color:${color}">
+    ${hero.emoji} ${hero.name.toUpperCase()} (${hero.className})
+  </span>
+  <br>
+  <span class="lvlup-sub">
+    monte au niveau ${hero.level}
+  </span>
+  <br><br>
+  Choisis 2 améliorations
+`;
+      refs.levelupChoices.innerHTML = '';
+      let picksLeft = 2;
+
+      ['FOR', 'RAP', 'CON', 'MANA'].forEach((stat) => {
+        const btn = document.createElement('button');
+        btn.className = 'class-btn';
+        btn.textContent = `${stat} +1`;
+        btn.onclick = () => {
+          hero.stats[stat] += 1;
+          picksLeft -= 1;
+          syncHeroCaps(hero, true);
+          renderGame();
+          if (picksLeft <= 0) {
+            closeLevelUpModal();
+            setTimeout(() => {
+              processNextLevelUp();
+            }, 500);
+          } else {
+            btn.disabled = true;
+          }
+        };
+        refs.levelupChoices.appendChild(btn);
+      });
+    }
+
+    function closeLevelUpModal() {
+      refs.modalOverlay.classList.remove('show');
+      refs.levelupModal.classList.remove('show');
+      refs.levelupChoices.innerHTML = '';
+      GAME.isLevelingUp = false;
+    }
+
+    function processNextLevelUp() {
+      if (GAME.pendingLevelUps.length) {
+        const nextHero = GAME.pendingLevelUps.shift();
+        openLevelUpModal(nextHero);
+      } else {
+        renderGame();
+      }
+    }
+
+    function beginGame() {
+      ensureSetupBag();
+      GAME.sharedBag = clone(GAME.setupSharedBag);
+      GAME.started = true;
+      GAME.displayHeroIndex = 0;
+      GAME.activeHeroIndex = 0;
+      GAME.selectedItemId = GAME.sharedBag[0]?.id || null;
+      GAME.selectedEquipmentId = getDisplayedHero()?.equipment.weapon?.id || getDisplayedHero()?.equipment.armor?.id || null;
+      refs.setupScreen.classList.add('hidden');
+      refs.gameScreen.classList.remove('hidden');
+      refs.log.innerHTML = '';
+      addLog(`L'équipe entre dans le donjon avec <strong>${GAME.party.length}</strong> héros.`, 'critical');
+      addLog('Hors combat, clique sur les carrés à gauche pour changer le héros affiché.', 'info');
+      renderGame();
+    }
+
+    function setDisplayedHero(index) {
+      if (index < 0 || index >= GAME.party.length) return;
+      if (GAME.inCombat) return;
+      GAME.displayHeroIndex = index;
+      const hero = getDisplayedHero();
+      GAME.selectedEquipmentId = hero?.equipment.weapon?.id || hero?.equipment.armor?.id || null;
+      GAME.selectedItemId = GAME.sharedBag[0]?.id || null;
+      renderGame();
+    }
+
+
+    function showTurnPopup(hero) {
+      const el = document.getElementById('turn-popup');
+      if (!el || !hero || !GAME.inCombat) return;
+
+      el.innerHTML = `Tour de&nbsp;<span class="turn-name">${hero.name.toUpperCase()}</span> ${hero.emoji}`;
+
+      el.classList.remove('hidden');
+
+      el.style.animation = 'none';
+      void el.offsetWidth;
+      el.style.animation = 'turnFade 1.2s forwards';
+
+      setTimeout(() => {
+        el.classList.add('hidden');
+      }, 1200);
+    }
+
+    function setActiveHero(index, announce = true) {
+      if (index < 0 || index >= GAME.party.length) return;
+      GAME.activeHeroIndex = index;
+      GAME.displayHeroIndex = index;
+      const hero = getActiveHero();
+      showTurnPopup(hero);
+      if (announce) addLog(`Tour actuel : <strong>${hero.name}</strong>.`, 'info');
+      renderGame();
+    }
+
+    function renderTeamScroll() {
+      refs.teamScroll.innerHTML = '';
+      GAME.party.forEach((hero, index) => {
+        const card = document.createElement('div');
+        card.className = 'team-card';
+        if (index === GAME.displayHeroIndex) card.classList.add('selected');
+        if (GAME.inCombat && index === GAME.activeHeroIndex) card.classList.add('active-turn');
+        if (hero.hp <= 0) card.classList.add('dead');
+        card.innerHTML = `
+          <div class="small-emoji">${hero.emoji}</div>
+          <div class="small-name">${hero.name}</div>
+          <div class="small-hp">${Math.max(0, Math.ceil(hero.hp))}/${hero.maxHp}</div>
+        `;
+        card.onclick = () => setDisplayedHero(index);
+        refs.teamScroll.appendChild(card);
+      });
+    }
+
+    function renderDisplayedHeroPanel() {
+      const hero = getDisplayedHero();
+      if (!hero) return;
+      const derived = getHeroDerived(hero);
+      document.getElementById('player-battle-emoji').textContent = hero.emoji;
+      document.getElementById('player-battle-name').textContent = hero.name;
+      document.getElementById('player-battle-sub').textContent = GAME.inCombat ? `${hero.className} — tour ${(GAME.activeHeroIndex + 1)}/${GAME.party.length}` : `${hero.className} prêt au combat`;
+      document.getElementById('player-status-chip').textContent = GAME.inCombat ? 'Choix d’action' : 'Exploration';
+
+      document.getElementById('player-card-hp').textContent = `${Math.max(0, Math.ceil(hero.hp))} / ${hero.maxHp}`;
+      document.getElementById('player-card-hp-bar').style.width = `${Math.max(0, hero.hp) / hero.maxHp * 100}%`;
+      document.getElementById('player-card-mana').textContent = `${Math.max(0, Math.ceil(hero.mana))} / ${hero.maxMana}`;
+      document.getElementById('player-card-mana-bar').style.width = `${Math.max(0, hero.mana) / hero.maxMana * 100}%`;
+
+      refs.skillLabel.textContent = `${CLASS_DATA[hero.className].skillName} (${CLASS_DATA[hero.className].skillCost} mana)`;
+    }
+
+    function renderEnemySection() {
+      const enemy = GAME.currentEnemy;
+      const hpText = document.getElementById('enemy-hp-text');
+      const hpBar = document.getElementById('enemy-hp-bar');
+      const name = document.getElementById('enemy-name');
+      const sprite = document.getElementById('enemy-sprite');
+      const sub = document.getElementById('enemy-sub');
+      const chip = document.getElementById('enemy-status-chip');
+      if (enemy) {
+        name.textContent = enemy.name;
+        sprite.textContent = enemy.sprite;
+        hpText.textContent = `${Math.max(0, Math.ceil(enemy.hp))} / ${enemy.maxHp}`;
+        hpBar.style.width = `${Math.max(0, enemy.hp) / enemy.maxHp * 100}%`;
+        sub.textContent = enemy.description || `Niveau ennemi ${enemy.level}`;
+        chip.textContent = GAME.inCombat ? 'Combat en cours' : 'Présence hostile';
+      } else {
+        name.textContent = 'Porte du Donjon';
+        sprite.textContent = '🏰';
+        hpText.textContent = '—';
+        hpBar.style.width = '0%';
+        sub.textContent = 'Une aventure t’attend';
+        chip.textContent = 'Exploration';
+      }
+    }
+
+    function renderEquipment() {
+      const hero = getDisplayedHero();
+      refs.equipmentList.innerHTML = '';
+      if (!hero) return;
+      const equipped = [hero.equipment.weapon, hero.equipment.armor].filter(Boolean);
+      if (!equipped.length) {
+        refs.equipmentList.innerHTML = '<div class="item-row"><div class="item-name">Aucun équipement</div><div class="item-meta">Ce héros n’a rien d’équipé.</div></div>';
+        refs.btnDropEquipped.disabled = true;
+        return;
+      }
+      equipped.forEach((item) => {
+        const row = document.createElement('div');
+        row.className = `item-row ${item.id === GAME.selectedEquipmentId ? 'selected' : ''}`;
+        row.innerHTML = `
+          <div class="item-name">${item.icon || '📦'} ${item.name}</div>
+          <div class="item-meta">${item.rarity || 'Objet'}<br>${itemDescription(item) || 'Aucun bonus affiché'}</div>
+        `;
+        row.onclick = () => {
+          GAME.selectedEquipmentId = item.id;
+          renderEquipment();
+        };
+        refs.equipmentList.appendChild(row);
+      });
+      refs.btnDropEquipped.disabled = GAME.isLevelingUp;
+    }
+
+    function renderBag() {
+      refs.inventoryList.innerHTML = '';
+      if (!GAME.sharedBag.length) {
+        refs.inventoryList.innerHTML = '<div class="item-row"><div class="item-name">Sac vide</div><div class="item-meta">Aucun objet partagé.</div></div>';
+        refs.btnUseItem.disabled = true;
+        refs.btnEquipItem.disabled = true;
+        refs.btnDropItem.disabled = true;
+        return;
+      }
+      GAME.sharedBag.forEach((item) => {
+        const row = document.createElement('div');
+        row.className = `item-row ${item.id === GAME.selectedItemId ? 'selected' : ''}`;
+        const quantity = item.stackable ? ` x${item.quantity}` : '';
+        row.innerHTML = `
+          <div class="item-name">${item.icon || '📦'} ${item.name}${quantity}</div>
+          <div class="item-meta">${item.rarity || 'Objet'}<br>${itemDescription(item) || 'Aucun bonus affiché'}</div>
+        `;
+        row.onclick = () => {
+          GAME.selectedItemId = item.id;
+          renderBag();
+        };
+        refs.inventoryList.appendChild(row);
+      });
+
+      const selected = GAME.sharedBag.find((item) => item.id === GAME.selectedItemId);
+      refs.btnUseItem.disabled = !selected || selected.type !== 'consumable' || GAME.inCombat || GAME.isResolvingRound || GAME.isLevelingUp;
+      refs.btnEquipItem.disabled = !selected || !['weapon', 'armor'].includes(selected.type) || GAME.inCombat || GAME.isResolvingRound || GAME.isLevelingUp;
+      refs.btnDropItem.disabled = !selected || GAME.inCombat || GAME.isResolvingRound || GAME.isLevelingUp;
+    }
+
+    function renderGame() {
+      renderTeamScroll();
+      renderDisplayedHeroPanel();
+      renderEnemySection();
+      renderEquipment();
+      renderBag();
+      refs.btnExplore.disabled = GAME.inCombat || GAME.isResting || GAME.isResolvingRound || GAME.isLevelingUp;
+      refs.btnRest.disabled = GAME.inCombat || GAME.isResting || GAME.isResolvingRound || GAME.isLevelingUp;
+      document.getElementById('exploration-controls').classList.toggle('hidden', GAME.inCombat);
+      document.getElementById('combat-controls').classList.toggle('hidden', !GAME.inCombat);
+    }
+
+    function stackOrPush(item) {
+      const existing = GAME.sharedBag.find((entry) => entry.name === item.name && entry.type === item.type && entry.stackable);
+      if (existing) {
+        existing.quantity += item.quantity || 1;
+        return existing;
+      }
+      const cloneItem = { ...clone(item), id: uid() };
+      GAME.sharedBag.push(cloneItem);
+      return cloneItem;
+    }
+
+    function removeSharedBagItem(itemId, quantity = 1) {
+      const idx = GAME.sharedBag.findIndex((entry) => entry.id === itemId);
+      if (idx === -1) return;
+      const item = GAME.sharedBag[idx];
+      if (item.stackable) {
+        item.quantity -= quantity;
+        if (item.quantity <= 0) GAME.sharedBag.splice(idx, 1);
+      } else {
+        GAME.sharedBag.splice(idx, 1);
+      }
+      GAME.selectedItemId = GAME.sharedBag[0]?.id || null;
+    }
+
+    function dropEquippedItem() {
+      const hero = getDisplayedHero();
+      if (!hero || GAME.inCombat || GAME.isResolvingRound) return;
+      let dropped = null;
+      if (hero.equipment.weapon?.id === GAME.selectedEquipmentId) {
+        dropped = hero.equipment.weapon;
+        hero.equipment.weapon = null;
+      } else if (hero.equipment.armor?.id === GAME.selectedEquipmentId) {
+        dropped = hero.equipment.armor;
+        hero.equipment.armor = null;
+      }
+      if (!dropped) return;
+      hero.inventory = hero.inventory.filter((item) => item.id !== dropped.id);
+      syncHeroCaps(hero, false);
+      addLog(`${hero.name} jette <strong>${dropped.name}</strong>.`, 'loss');
+      GAME.selectedEquipmentId = hero.equipment.weapon?.id || hero.equipment.armor?.id || null;
+      renderGame();
+    }
+
+    function dropBagItem() {
+      if (GAME.inCombat || GAME.isResolvingRound) return;
+      const item = GAME.sharedBag.find((entry) => entry.id === GAME.selectedItemId);
+      if (!item) return;
+      addLog(`Tu jettes <strong>${item.name}</strong> du sac commun.`, 'loss');
+      removeSharedBagItem(item.id, item.stackable ? 1 : item.quantity || 1);
+      renderGame();
+    }
+
+    function useBagItem() {
+      if (GAME.inCombat || GAME.isResolvingRound) return;
+      const item = GAME.sharedBag.find((entry) => entry.id === GAME.selectedItemId);
+      const hero = getDisplayedHero();
+      if (!item || !hero || item.type !== 'consumable') return;
+
+      if (item.heal) {
+        const oldHp = hero.hp;
+        hero.hp = Math.min(hero.maxHp, hero.hp + item.heal);
+        addLog(`${hero.name} utilise ${item.name} : <strong>+${Math.ceil(hero.hp - oldHp)} PV</strong>.`, 'gain');
+      }
+      if (item.manaRestore) {
+        const oldMana = hero.mana;
+        hero.mana = Math.min(hero.maxMana, hero.mana + item.manaRestore);
+        addLog(`${hero.name} récupère <strong>${Math.ceil(hero.mana - oldMana)} mana</strong>.`, 'gain');
+      }
+      removeSharedBagItem(item.id, 1);
+      renderGame();
+    }
+
+    function equipFromBag() {
+      if (GAME.inCombat || GAME.isResolvingRound) return;
+      const hero = getDisplayedHero();
+      const item = GAME.sharedBag.find((entry) => entry.id === GAME.selectedItemId);
+      if (!hero || !item || !['weapon', 'armor'].includes(item.type)) return;
+
+      if (item.type === 'weapon' && hero.equipment.weapon) {
+        stackOrPush(hero.equipment.weapon);
+        hero.inventory = hero.inventory.filter((entry) => entry.id !== hero.equipment.weapon.id);
+      }
+      if (item.type === 'armor' && hero.equipment.armor) {
+        stackOrPush(hero.equipment.armor);
+        hero.inventory = hero.inventory.filter((entry) => entry.id !== hero.equipment.armor.id);
+      }
+
+      removeSharedBagItem(item.id, 1);
+      const equipped = { ...clone(item), id: uid(), quantity: 1, stackable: false };
+      hero.inventory.push(equipped);
+      if (item.type === 'weapon') hero.equipment.weapon = equipped;
+      if (item.type === 'armor') hero.equipment.armor = equipped;
+
+      syncHeroCaps(hero, false);
+      GAME.selectedEquipmentId = equipped.id;
+      addLog(`${hero.name} équipe <strong>${equipped.name}</strong>.`, 'gain');
+      renderGame();
+    }
+
+    function startCombat() {
+      const referenceLevel = Math.max(...GAME.party.map((hero) => hero.level));
+      const pool = BESTIARY.filter((e) => e.level <= referenceLevel + 1 && !e.boss);
+      const template = (GAME.roomsCleared > 0 && GAME.roomsCleared % 10 === 0)
+        ? BESTIARY.find((e) => e.boss)
+        : pool[Math.floor(Math.random() * pool.length)];
+
+      GAME.currentEnemy = clone(template);
+      GAME.currentEnemy.maxHp = template.hp + GAME.roomsCleared * 3 + referenceLevel * 4;
+      GAME.currentEnemy.hp = GAME.currentEnemy.maxHp;
+      GAME.currentEnemy.dmgMin += Math.floor(GAME.roomsCleared / 4);
+      GAME.currentEnemy.dmgMax += Math.floor(GAME.roomsCleared / 3);
+      GAME.currentEnemy.description = GAME.currentEnemy.boss ? 'Le boss du palier te défie.' : `Un ennemi du donjon surgit à la salle ${GAME.roomsCleared}.`;
+      GAME.inCombat = true;
+      GAME.pendingActions = [];
+      GAME.heroesChosenThisRound = 0;
+      GAME.party.forEach((hero) => hero.defending = false);
+      addLog(`Un <strong>${GAME.currentEnemy.name}</strong> bloque la route de l'équipe !`, 'loss');
+      setActiveHero(getAliveIndexes()[0] || 0, true);
+    }
+
+    function planAction(type) {
+      if (!GAME.inCombat || GAME.isResolvingRound) return;
+      const hero = getActiveHero();
+      if (!hero || hero.hp <= 0) return;
+
+      GAME.pendingActions.push({
+        heroId: hero.id,
+        type,
+      });
+
+      const actionName = {
+        attack: 'Attaque',
+        heavy: 'Attaque puissante',
+        block: 'Encaisser',
+        skill: CLASS_DATA[hero.className].skillName,
+      }[type] || type;
+
+      addLog(`${hero.name} prépare : <strong>${actionName}</strong>.`, 'info');
+      GAME.heroesChosenThisRound += 1;
+
+      const alive = getAliveIndexes();
+      if (GAME.heroesChosenThisRound >= alive.length) {
+        resolveTeamRound();
+      } else {
+        const next = alive.find((idx) => idx > GAME.activeHeroIndex) ?? alive[0];
+        setActiveHero(next, true);
+      }
+    }
+
+    async function resolveTeamRound() {
+      GAME.isResolvingRound = true;
+      renderGame();
+      addLog('<strong>Résolution du tour du groupe…</strong>', 'critical');
+
+      for (const planned of GAME.pendingActions) {
+        if (!GAME.currentEnemy || GAME.currentEnemy.hp <= 0) break;
+        const hero = GAME.party.find((entry) => entry.id === planned.heroId);
+        if (!hero || hero.hp <= 0) continue;
+        await executeHeroAction(hero, planned.type);
+      }
+
+      GAME.pendingActions = [];
+      GAME.heroesChosenThisRound = 0;
+
+      if (GAME.currentEnemy && GAME.currentEnemy.hp > 0) {
+        await enemyTurn();
+      }
+
+      if (GAME.currentEnemy && GAME.currentEnemy.hp <= 0) {
+        victory();
+      } else {
+        const alive = getAliveIndexes();
+        if (alive.length) setActiveHero(alive[0], true);
+      }
+
+      GAME.isResolvingRound = false;
+      renderGame();
+    }
+
+    async function executeHeroAction(hero, type) {
+      GAME.displayHeroIndex = GAME.party.findIndex((entry) => entry.id === hero.id);
+      renderGame();
+      await wait(250);
+
+      const derived = getHeroDerived(hero);
+
+      if (type === 'block') {
+        hero.defending = true;
+        addLog(`${hero.name} se prépare à encaisser.`, 'info');
+        return;
+      }
+
+      if (type === 'skill') {
+        const cost = CLASS_DATA[hero.className].skillCost;
+        if (hero.mana < cost) {
+          addLog(`${hero.name} n'a pas assez de mana. Il attaque normalement à la place.`, 'loss');
+          type = 'attack';
+        } else {
+          hero.mana -= cost;
+        }
+      }
+
+      let hitChance = 88;
+      let baseDamage = roll(Math.max(1, derived.atk - 4), derived.atk + 3);
+      let critBonus = false;
+
+      if (type === 'heavy') {
+        hitChance = 65;
+        baseDamage = roll(derived.atk + 1, derived.atk + 11);
+      }
+
+      if (type === 'skill') {
+        if (hero.className === 'Guerrier') {
+          baseDamage = roll(derived.atk + 4, derived.atk + 10);
+          hero.defending = true;
+        }
+        if (hero.className === 'Mage') {
+          baseDamage = roll(derived.atk + 8, derived.atk + 18) + Math.floor(hero.stats.MANA * 1.4);
+        }
+        if (hero.className === 'Assassin') {
+          baseDamage = Math.floor(roll(derived.atk + 5, derived.atk + 13) * 1.2);
+          const realCrit = roll(1, 100) <= derived.crit;
+          if (realCrit) {
+            baseDamage = Math.floor(baseDamage * 1.5);
+            critBonus = true;
+          }
+        }
+      } else if (roll(1, 100) <= derived.crit) {
+        critBonus = true;
+        baseDamage = Math.floor(baseDamage * 1.5);
+      }
+
+      if (type !== 'skill' && roll(1, 100) > hitChance) {
+        addLog(`${hero.name} rate son attaque !`, 'info');
+        return;
+      }
+
+      const finalDamage = Math.max(1, baseDamage - Math.floor((GAME.currentEnemy.level || 1) / 2));
+      GAME.currentEnemy.hp = Math.max(0, GAME.currentEnemy.hp - finalDamage);
+
+      const actionLabel = {
+        attack: 'attaque',
+        heavy: 'attaque puissante',
+        skill: CLASS_DATA[hero.className].skillName
+      }[type] || type;
+
+      addLog(`${hero.name} utilise <strong>${actionLabel}</strong> et inflige <strong>${finalDamage}</strong> dégâts.${critBonus ? ' <span class="critical">CRITIQUE !</span>' : ''}`, critBonus ? 'critical' : '');
+      shakeElement(refs.enemyCard);
+      renderEnemySection();
+      await wait(320);
+    }
+
+    async function enemyTurn() {
+      const aliveIndexes = getAliveIndexes();
+      if (!aliveIndexes.length || !GAME.currentEnemy || GAME.currentEnemy.hp <= 0) return;
+
+      const targetIndex = aliveIndexes[Math.floor(Math.random() * aliveIndexes.length)];
+      const hero = GAME.party[targetIndex];
+      GAME.displayHeroIndex = targetIndex;
+      renderGame();
+      await wait(250);
+
+      const derived = getHeroDerived(hero);
+      if (roll(1, 100) <= derived.evasion) {
+        addLog(`${hero.name} esquive l’attaque de ${GAME.currentEnemy.name} !`, 'info');
+        return;
+      }
+
+      let damage = roll(GAME.currentEnemy.dmgMin, GAME.currentEnemy.dmgMax);
+      damage = Math.max(1, damage - Math.floor(derived.def / 3));
+      if (hero.defending) {
+        damage = Math.max(1, Math.floor(damage * 0.45));
+        addLog(`${hero.name} encaisse une partie du choc grâce à sa défense.`, 'info');
+        hero.defending = false;
+      }
+
+      hero.hp = Math.max(0, hero.hp - damage);
+      addLog(`${GAME.currentEnemy.name} inflige <strong>${damage}</strong> dégâts à <strong>${hero.name}</strong> !`, 'loss');
+      shakeElement(refs.playerCard);
+      renderGame();
+
+      if (!getAliveHeroes().length) {
+        gameOver();
+      }
+      await wait(320);
+    }
+
+    function victory() {
+      const enemy = GAME.currentEnemy;
+      GAME.inCombat = false;
+      GAME.currentEnemy = null;
+      addLog(`${enemy.name} est vaincu ! <strong>+${enemy.xp} XP</strong> pour toute l’équipe.`, 'gain');
+      GAME.party.filter((hero) => hero.hp > 0).forEach((hero) => {
+        hero.xp += enemy.xp;
+        tryLevelUp(hero);
+      });
+      rollLoot(enemy);
+      renderGame();
+      if (GAME.pendingLevelUps.length && !GAME.isLevelingUp) {
+        processNextLevelUp();
+      }
+    }
+
+    function tryLevelUp(hero) {
+      let leveled = false;
+      while (hero.xp >= hero.xpNext) {
+        hero.xp -= hero.xpNext;
+        hero.level += 1;
+        hero.xpNext = Math.floor(hero.xpNext * 1.4);
+        syncHeroCaps(hero, true);
+        addLog(`<strong>${hero.name}</strong> monte niveau ${hero.level} !`, 'critical');
+        GAME.pendingLevelUps.push(hero);
+        leveled = true;
+      }
+      return leveled;
+    }
+
+    function gameOver() {
+      GAME.inCombat = false;
+      GAME.currentEnemy = null;
+      addLog('<strong>Toute l’équipe a succombé dans le donjon.</strong>', 'loss');
+      renderGame();
+    }
+
+    function rollLoot(enemy) {
+      const rolls = Math.max(1, Math.ceil(GAME.party.length / 2));
+      const drops = [];
+      for (let i = 0; i < rolls; i++) {
+        const r = roll(1, 100);
+        if (r <= 38) {
+          drops.push({ name: 'Potion de soin', type: 'consumable', stackable: true, quantity: 1, heal: 35 + Math.max(1, GAME.party[0]?.level || 1) * 3, effectText: 'Restaure des PV', icon: '🧪' });
+        } else if (r <= 60) {
+          drops.push({ name: 'Potion de mana', type: 'consumable', stackable: true, quantity: 1, manaRestore: 30, effectText: 'Restaure 30 mana', icon: '🔵' });
+        } else if (r <= 80) {
+          drops.push(clone(WEAPONS[Math.floor(Math.random() * WEAPONS.length)]));
+        } else {
+          drops.push(clone(ARMORS[Math.floor(Math.random() * ARMORS.length)]));
+        }
+      }
+      if (enemy.boss) drops.push(clone(WEAPONS[Math.min(WEAPONS.length - 1, 4)]));
+
+      drops.forEach((item) => {
+        if (item.stackable) stackOrPush(item);
+        else GAME.sharedBag.push({ ...item, id: uid(), quantity: 1 });
+      });
+
+      addLog(`<strong>Butin récupéré :</strong><br>${drops.map((item) => `${item.icon || '📦'} ${item.name}`).join('<br>')}`, 'loot');
+      GAME.selectedItemId = GAME.sharedBag[0]?.id || null;
+    }
+
+    function explore() {
+      if (GAME.inCombat || GAME.isResting || GAME.isLevelingUp) return;
+      GAME.roomsCleared += 1;
+      const eventRoll = roll(1, 100);
+      if (eventRoll <= 64) return startCombat();
+      if (eventRoll <= 84) {
+        findTreasure();
+        renderGame();
+        return;
+      }
+      trapEvent();
+      renderGame();
+    }
+
+    function findTreasure() {
+      const bonusRoll = roll(1, 100);
+      addLog('L’équipe découvre un coffre mystérieux.', 'info');
+      if (bonusRoll <= 50) {
+        stackOrPush({ name: 'Potion de soin', type: 'consumable', stackable: true, quantity: 2, heal: 35, effectText: 'Restaure 35 PV', icon: '🧪' });
+        addLog('Le coffre contient <strong>2 Potions de soin</strong>.', 'gain');
+      } else if (bonusRoll <= 70) {
+        stackOrPush({ name: 'Potion de mana', type: 'consumable', stackable: true, quantity: 2, manaRestore: 30, effectText: 'Restaure 30 mana', icon: '🔵' });
+        addLog('Le coffre contient <strong>2 Potions de mana</strong>.', 'gain');
+      } else if (bonusRoll <= 85) {
+        const item = clone(WEAPONS[Math.floor(Math.random() * WEAPONS.length)]);
+        item.id = uid();
+        GAME.sharedBag.push(item);
+        addLog(`Le coffre contient <strong>${item.name}</strong>.`, 'loot');
+      } else {
+        const item = clone(ARMORS[Math.floor(Math.random() * ARMORS.length)]);
+        item.id = uid();
+        GAME.sharedBag.push(item);
+        addLog(`Le coffre contient <strong>${item.name}</strong>.`, 'loot');
+      }
+    }
+
+    function trapEvent() {
+      const aliveIndexes = getAliveIndexes();
+      if (!aliveIndexes.length) return;
+      const targetIndex = aliveIndexes[Math.floor(Math.random() * aliveIndexes.length)];
+      const hero = GAME.party[targetIndex];
+      const damage = roll(8, 14) + GAME.roomsCleared;
+      hero.hp = Math.max(0, hero.hp - damage);
+      addLog(`⚠️ Un piège blesse <strong>${hero.name}</strong> et inflige <strong>${damage}</strong> dégâts !`, 'loss');
+      if (!getAliveHeroes().length) gameOver();
+    }
+
+    function rest() {
+      if (GAME.inCombat || GAME.isResting || GAME.isLevelingUp) return;
+      GAME.isResting = true;
+      refs.modalOverlay.classList.add('show');
+      refs.restModal.classList.add('show');
+      let timeLeft = 10;
+      refs.restText.innerHTML = `Vous vous reposez.<br>Temps d'attente : <strong>0:10</strong>`;
+      refs.restInterval = setInterval(() => {
+        timeLeft--;
+        refs.restText.innerHTML = `Vous vous reposez.<br>Temps d'attente : <strong>0:${timeLeft.toString().padStart(2, '0')}</strong>`;
+        if (timeLeft <= 0) {
+          clearInterval(refs.restInterval);
+          GAME.party.forEach((hero) => syncHeroCaps(hero, true));
+          GAME.isResting = false;
+          refs.modalOverlay.classList.remove('show');
+          refs.restModal.classList.remove('show');
+          addLog('Toute l’équipe est complètement reposée. PV et mana restaurés.', 'gain');
+          renderGame();
+        }
+      }, 1000);
+    }
+
+    function wait(ms) {
+      return new Promise((resolve) => setTimeout(resolve, ms));
+    }
+
+    refs.addHeroBtn.addEventListener('click', openCreationModal);
+    refs.cancelCreateBtn.addEventListener('click', closeCreationModal);
+    refs.confirmCreateBtn.addEventListener('click', addCreatedHero);
+    refs.heroName.addEventListener('input', renderCreation);
+    refs.playBtn.addEventListener('click', beginGame);
+
+    refs.btnExplore.addEventListener('click', explore);
+    refs.btnRest.addEventListener('click', rest);
+    refs.btnAttack.addEventListener('click', () => planAction('attack'));
+    refs.btnHeavy.addEventListener('click', () => planAction('heavy'));
+    refs.btnBlock.addEventListener('click', () => planAction('block'));
+    refs.btnSkill.addEventListener('click', () => planAction('skill'));
+
+    refs.btnUseItem.addEventListener('click', useBagItem);
+    refs.btnEquipItem.addEventListener('click', equipFromBag);
+    refs.btnDropItem.addEventListener('click', dropBagItem);
+    refs.btnDropEquipped.addEventListener('click', dropEquippedItem);
+
+    renderSetupParty();
+  </script>
+</body>
+</html>
