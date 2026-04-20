@@ -8,8 +8,8 @@
       },
       Mage: {
         emoji: '🧙‍♂️',
-        bonuses: ['+3 MANA au départ', '+1 RAP au départ', 'Compétence : Boule de feu', 'Gros dégâts magiques'],
-        baseAdjust: { FOR: 0, CON: 0, RAP: 1, MANA: 3 },
+        bonuses: ['+5 MANA au départ', '-1 CON au départ', 'Compétence : Boule de feu', 'Gros dégâts magiques'],
+        baseAdjust: { FOR: 0, CON: -1, RAP: 0, MANA: 5 },
         skillName: 'Boule de feu',
         skillCost: 10,
       },
@@ -128,6 +128,8 @@
       isResting: false,
       restInterval: null,
       restEndsAt: null,
+      isReviving: false,
+      reviveEndsAt: null,
       pendingLevelUps: [],
       isLevelingUp: false,
       pendingModalAction: null,
@@ -364,24 +366,46 @@
       const armorMana = armor?.mana || 0;
       const armorHp = armor?.hp || 0;
       const armorEva = armor?.evasion || 0;
+      const atkBuffMultiplier = hero.atkBuffTurns > 0 ? 1 + (hero.atkBuffPct || 0) : 1;
 
       const maxHp = 52 + stats.CON * 12 + hero.level * 10 + armorHp;
       const maxMana = 18 + stats.MANA * 8 + hero.level * 4 + weaponMana + armorMana;
-      const atk = Math.max(1, 4 + stats.FOR * 2 + hero.level + weaponAtk);
+      const atk = Math.max(1, Math.floor((4 + stats.FOR * 2 + hero.level + weaponAtk) * atkBuffMultiplier));
       const def = Math.max(0, Math.floor(stats.CON * 0.8) + armorDef + weaponDef);
       const evasion = Math.min(45, 4 + stats.RAP * 2 + armorEva + (hero.className === 'Assassin' ? 5 : 0));
       const crit = Math.min(55, 5 + Math.floor(stats.RAP * 1.5) + weaponCrit + (hero.className === 'Assassin' ? 8 : 0));
       return { maxHp, maxMana, atk, def, evasion, crit };
     }
 
+    function getMageSpellPower(hero) {
+      const weapon = hero.equipment.weapon;
+      const armor = hero.equipment.armor;
+      const weaponAtk = weapon?.atk || 0;
+      const weaponMana = weapon?.mana || 0;
+      const armorMana = armor?.mana || 0;
+      return Math.max(1, 4 + hero.stats.MANA * 2 + hero.level + weaponAtk + Math.floor((weaponMana + armorMana) / 3));
+    }
+
+    function getEnemyStatDebuffTotals(enemy) {
+      const totals = { FOR: 0, RAP: 0, CON: 0, MANA: 0 };
+      if (!enemy) return totals;
+      const activeDebuffs = Array.isArray(enemy.statDebuffs)
+        ? enemy.statDebuffs.filter((debuff) => debuff && debuff.stat && (debuff.turns || 0) > 0)
+        : [];
+      activeDebuffs.forEach((debuff) => {
+        totals[debuff.stat] = (totals[debuff.stat] || 0) + (debuff.amount || 0);
+      });
+      return totals;
+    }
+
     function getEnemyDerived(enemy) {
       const baseStats = enemy.stats || { FOR: 5, RAP: 5, CON: 5, MANA: 5 };
-      const debuff = enemy.statDebuffTurns > 0 ? enemy.statDebuff : null;
+      const debuffTotals = getEnemyStatDebuffTotals(enemy);
       const stats = {
-        FOR: Math.max(1, baseStats.FOR - (debuff?.stat === 'FOR' ? debuff.amount : 0)),
-        RAP: Math.max(1, baseStats.RAP - (debuff?.stat === 'RAP' ? debuff.amount : 0)),
-        CON: Math.max(1, baseStats.CON - (debuff?.stat === 'CON' ? debuff.amount : 0)),
-        MANA: Math.max(1, baseStats.MANA - (debuff?.stat === 'MANA' ? debuff.amount : 0)),
+        FOR: Math.max(1, baseStats.FOR - (debuffTotals.FOR || 0)),
+        RAP: Math.max(1, baseStats.RAP - (debuffTotals.RAP || 0)),
+        CON: Math.max(1, baseStats.CON - (debuffTotals.CON || 0)),
+        MANA: Math.max(1, baseStats.MANA - (debuffTotals.MANA || 0)),
       };
       const mods = ENEMY_ARCHETYPE_MODS[enemy.archetype] || {};
       const roomScale = enemy.roomScale || 0;
@@ -457,8 +481,16 @@
       enemy.guardBreakAmount = 0;
       enemy.fortifyTurns = 0;
       enemy.fortifyAmount = 0;
+      enemy.burnTurns = 0;
+      enemy.burnDamage = 0;
+      enemy.burnPct = 0;
+      enemy.energyDrainTurns = 0;
+      enemy.energyDrainAmount = 0;
+      enemy.energyDrainPct = 0;
+      enemy.statDebuffs = [];
       enemy.statDebuffTurns = 0;
       enemy.statDebuff = null;
+      enemy.statDebuffPct = 0;
       enemy.description = buildEnemyDescription(enemy);
       const derived = getEnemyDerived(enemy);
       enemy.maxHp = derived.maxHp;
@@ -480,8 +512,31 @@
       enemy.guardBreakAmount = savedEnemy.guardBreakAmount || 0;
       enemy.fortifyTurns = savedEnemy.fortifyTurns || 0;
       enemy.fortifyAmount = savedEnemy.fortifyAmount || 0;
-      enemy.statDebuffTurns = savedEnemy.statDebuffTurns || 0;
-      enemy.statDebuff = savedEnemy.statDebuff || null;
+      enemy.burnTurns = savedEnemy.burnTurns || 0;
+      enemy.burnDamage = savedEnemy.burnDamage || 0;
+      enemy.burnPct = savedEnemy.burnPct || 0;
+      enemy.energyDrainTurns = savedEnemy.energyDrainTurns || 0;
+      enemy.energyDrainAmount = savedEnemy.energyDrainAmount || 0;
+      enemy.energyDrainPct = savedEnemy.energyDrainPct || 0;
+      enemy.statDebuffs = Array.isArray(savedEnemy.statDebuffs)
+        ? savedEnemy.statDebuffs.filter((debuff) => debuff && debuff.stat && (debuff.turns || 0) > 0).map((debuff) => ({
+          stat: debuff.stat,
+          amount: debuff.amount || 0,
+          pct: debuff.pct || 0,
+          turns: debuff.turns || 0,
+        }))
+        : [];
+      if (!enemy.statDebuffs.length && savedEnemy.statDebuff && (savedEnemy.statDebuffTurns || 0) > 0) {
+        enemy.statDebuffs.push({
+          stat: savedEnemy.statDebuff.stat,
+          amount: savedEnemy.statDebuff.amount || 0,
+          pct: savedEnemy.statDebuffPct || 0,
+          turns: savedEnemy.statDebuffTurns || 0,
+        });
+      }
+      enemy.statDebuffTurns = enemy.statDebuffs.reduce((max, debuff) => Math.max(max, debuff.turns || 0), 0);
+      enemy.statDebuff = enemy.statDebuffs[0] || null;
+      enemy.statDebuffPct = enemy.statDebuffs[0]?.pct || 0;
       enemy.roomScale = savedEnemy.roomScale || Math.floor((GAME.roomsCleared || 0) / 4);
       enemy.description = savedEnemy.description || buildEnemyDescription(enemy);
       const derived = getEnemyDerived(enemy);
@@ -622,10 +677,58 @@
         GAME.currentEnemy.guardBreakTurns -= 1;
         if (GAME.currentEnemy.guardBreakTurns <= 0) GAME.currentEnemy.guardBreakAmount = 0;
       }
-      if (GAME.currentEnemy.statDebuffTurns > 0) {
-        GAME.currentEnemy.statDebuffTurns -= 1;
-        if (GAME.currentEnemy.statDebuffTurns <= 0) GAME.currentEnemy.statDebuff = null;
+      if (GAME.currentEnemy.energyDrainTurns > 0) {
+        const drained = Math.min(GAME.currentEnemy.mana || 0, Math.max(1, Math.floor((GAME.currentEnemy.maxMana || 0) * ((GAME.currentEnemy.energyDrainPct || 0) / 100))));
+        GAME.currentEnemy.mana = Math.max(0, (GAME.currentEnemy.mana || 0) - drained);
+        GAME.currentEnemy.energyDrainTurns -= 1;
+        addLog(`${GAME.currentEnemy.name} perd <strong>${drained}</strong> énergie.`, 'info');
+        if (GAME.currentEnemy.energyDrainTurns <= 0) {
+          GAME.currentEnemy.energyDrainAmount = 0;
+          GAME.currentEnemy.energyDrainPct = 0;
+        }
       }
+      if (GAME.currentEnemy.burnTurns > 0) {
+        const burn = Math.max(1, Math.floor((GAME.currentEnemy.maxHp || 0) * ((GAME.currentEnemy.burnPct || 0) / 100)));
+        GAME.currentEnemy.hp = Math.max(0, GAME.currentEnemy.hp - burn);
+        GAME.currentEnemy.burnTurns -= 1;
+        addLog(`${GAME.currentEnemy.name} subit <strong>${burn}</strong> dégâts de brûlure.`, 'loss');
+        if (GAME.currentEnemy.burnTurns <= 0) {
+          GAME.currentEnemy.burnDamage = 0;
+          GAME.currentEnemy.burnPct = 0;
+        }
+      }
+      if (Array.isArray(GAME.currentEnemy.statDebuffs) && GAME.currentEnemy.statDebuffs.length) {
+        GAME.currentEnemy.statDebuffs = GAME.currentEnemy.statDebuffs
+          .map((debuff) => ({ ...debuff, turns: (debuff.turns || 0) - 1 }))
+          .filter((debuff) => debuff.turns > 0);
+        GAME.currentEnemy.statDebuffTurns = GAME.currentEnemy.statDebuffs.reduce((max, debuff) => Math.max(max, debuff.turns || 0), 0);
+        GAME.currentEnemy.statDebuff = GAME.currentEnemy.statDebuffs[0] || null;
+        GAME.currentEnemy.statDebuffPct = GAME.currentEnemy.statDebuffs[0]?.pct || 0;
+      } else {
+        GAME.currentEnemy.statDebuffTurns = 0;
+        GAME.currentEnemy.statDebuff = null;
+        GAME.currentEnemy.statDebuffPct = 0;
+      }
+    }
+
+    function tickHeroStatusesAfterEnemyTurn() {
+      GAME.party.forEach((hero) => {
+        if (hero.atkBuffTurns > 0) {
+          hero.atkBuffTurns -= 1;
+          if (hero.atkBuffTurns <= 0) hero.atkBuffPct = 0;
+        }
+      });
+    }
+
+    function getActionConfig(hero, type) {
+      if (hero?.className === 'Mage') {
+        if (type === 'attack') return { title: 'Blizzard', detail: 'Dégâts magiques légers', cost: 3 };
+        if (type === 'heavy') return { title: 'Magic Missile', detail: 'Plus fort, plus coûteux', cost: 5 };
+      }
+      if (type === 'attack') return { title: 'Attaque normale', detail: 'Planifier pour ce héros', cost: 0 };
+      if (type === 'heavy') return { title: 'Attaque puissante', detail: 'Plus forte mais moins précise', cost: 0 };
+      if (type === 'block') return { title: 'Encaisser', detail: 'Réduit la prochaine attaque', cost: 0 };
+      return { title: 'Compétence de classe', detail: '', cost: 0 };
     }
 
     function renderSetupParty() {
@@ -751,6 +854,8 @@
         },
         defending: false,
         stunnedTurns: 0,
+        atkBuffTurns: 0,
+        atkBuffPct: 0,
       };
       syncHeroCaps(hero, true);
       GAME.party.push(hero);
@@ -943,6 +1048,10 @@ refs.levelupText.innerHTML = `
     }
 
     function actionLabelForType(hero, type) {
+      if (hero?.className === 'Mage') {
+        if (type === 'attack') return 'Blizzard';
+        if (type === 'heavy') return 'Magic Missile';
+      }
       return {
         attack: 'Attaque',
         heavy: 'Attaque puissante',
@@ -983,12 +1092,13 @@ refs.levelupText.innerHTML = `
       }
 
       const enemyDerived = getEnemyDerived(enemy);
+      const enemyDebuffTotals = getEnemyStatDebuffTotals(enemy);
       refs.combatEnemyStats.innerHTML = `
         <div class="combat-panel-title">Ennemi</div>
-        <div class="combat-stat-line"><strong>FOR</strong><span>${enemy.stats.FOR}</span></div>
-        <div class="combat-stat-line"><strong>RAP</strong><span>${enemy.stats.RAP}</span></div>
-        <div class="combat-stat-line"><strong>CON</strong><span>${enemy.stats.CON}</span></div>
-        <div class="combat-stat-line"><strong>MANA</strong><span>${enemy.stats.MANA}</span></div>
+        <div class="combat-stat-line"><strong>FOR</strong><span>${Math.max(1, enemy.stats.FOR - (enemyDebuffTotals.FOR || 0))}</span></div>
+        <div class="combat-stat-line"><strong>RAP</strong><span>${Math.max(1, enemy.stats.RAP - (enemyDebuffTotals.RAP || 0))}</span></div>
+        <div class="combat-stat-line"><strong>CON</strong><span>${Math.max(1, enemy.stats.CON - (enemyDebuffTotals.CON || 0))}</span></div>
+        <div class="combat-stat-line"><strong>MANA</strong><span>${Math.max(1, enemy.stats.MANA - (enemyDebuffTotals.MANA || 0))}</span></div>
         <div class="combat-stat-spacer"></div>
         <div class="combat-stat-line is-atk"><strong>ATK</strong><span>${enemyDerived.atk}</span></div>
         <div class="combat-stat-line is-def"><strong>DEF</strong><span>${enemyDerived.def}</span></div>
@@ -1007,6 +1117,9 @@ refs.levelupText.innerHTML = `
 
       const heroBonus = [];
       const heroMalus = [];
+      if ((hero.atkBuffTurns || 0) > 0 && (hero.atkBuffPct || 0) > 0) {
+        heroBonus.push(`ATK +${Math.round(hero.atkBuffPct * 100)}% (${hero.atkBuffTurns} tour(s))`);
+      }
       if ((hero.stunnedTurns || 0) > 0) heroMalus.push(`Étourdi ${hero.stunnedTurns} tour(s)`);
       refs.combatPlayerBonusText.innerHTML = `${formatStatusLines(heroBonus, 'bonus')}<br>${formatStatusLines(heroMalus, 'malus')}`;
 
@@ -1014,9 +1127,12 @@ refs.levelupText.innerHTML = `
       const enemyMalus = [];
       if ((GAME.currentEnemy?.fortifyTurns || 0) > 0) enemyBonus.push(`Armure renforcée ${GAME.currentEnemy.fortifyTurns} tour(s)`);
       if ((GAME.currentEnemy?.guardBreakTurns || 0) > 0) enemyMalus.push(`Dégâts réduits ${GAME.currentEnemy.guardBreakTurns} tour(s)`);
-      if ((GAME.currentEnemy?.statDebuffTurns || 0) > 0 && GAME.currentEnemy?.statDebuff) {
-        enemyMalus.push(`-${GAME.currentEnemy.statDebuff.amount} ${GAME.currentEnemy.statDebuff.stat} (${GAME.currentEnemy.statDebuffTurns} tour(s))`);
-      }
+      if ((GAME.currentEnemy?.burnTurns || 0) > 0) enemyMalus.push(`Brûlure -${GAME.currentEnemy.burnPct || 0}% PV max (${GAME.currentEnemy.burnTurns} tour(s))`);
+      if ((GAME.currentEnemy?.energyDrainTurns || 0) > 0) enemyMalus.push(`Énergie -${GAME.currentEnemy.energyDrainPct || 0}% (${GAME.currentEnemy.energyDrainTurns} tour(s))`);
+      const enemyStatDebuffs = Array.isArray(GAME.currentEnemy?.statDebuffs) ? GAME.currentEnemy.statDebuffs : [];
+      enemyStatDebuffs.forEach((debuff) => {
+        enemyMalus.push(`-${debuff.pct || 0}% ${debuff.stat} (${debuff.turns} tour(s))`);
+      });
       refs.combatEnemyBonusText.innerHTML = `${formatStatusLines(enemyBonus, 'bonus')}<br>${formatStatusLines(enemyMalus, 'malus')}`;
     }
 
@@ -1078,6 +1194,10 @@ refs.levelupText.innerHTML = `
       document.getElementById('player-card-mana-bar').style.width = `${Math.max(0, hero.mana) / hero.maxMana * 100}%`;
       document.getElementById('player-card-mana-bar-explore').style.width = `${Math.max(0, hero.mana) / hero.maxMana * 100}%`;
 
+      const attackConfig = getActionConfig(hero, 'attack');
+      const heavyConfig = getActionConfig(hero, 'heavy');
+      refs.btnAttack.innerHTML = `${attackConfig.title}<small>${attackConfig.detail}${attackConfig.cost ? ` • ${attackConfig.cost} mana` : ''}</small>`;
+      refs.btnHeavy.innerHTML = `${heavyConfig.title}<small>${heavyConfig.detail}${heavyConfig.cost ? ` • ${heavyConfig.cost} mana` : ''}</small>`;
       refs.skillLabel.textContent = `${CLASS_DATA[hero.className].skillName} (${CLASS_DATA[hero.className].skillCost} mana)`;
     }
 
@@ -1189,8 +1309,8 @@ refs.levelupText.innerHTML = `
       renderEquipment();
       renderBag();
       renderCombatHud();
-      refs.btnExplore.disabled = GAME.inCombat || GAME.isResting || GAME.isResolvingRound || GAME.isLevelingUp;
-      refs.btnRest.disabled = GAME.inCombat || GAME.isResting || GAME.isResolvingRound || GAME.isLevelingUp;
+      refs.btnExplore.disabled = GAME.inCombat || GAME.isResting || GAME.isReviving || GAME.isResolvingRound || GAME.isLevelingUp;
+      refs.btnRest.disabled = GAME.inCombat || GAME.isResting || GAME.isReviving || GAME.isResolvingRound || GAME.isLevelingUp;
       refs.gameScreen.classList.toggle('in-combat', GAME.inCombat);
       document.getElementById('exploration-controls').classList.toggle('hidden', GAME.inCombat);
       document.getElementById('combat-controls').classList.toggle('hidden', !GAME.inCombat);
@@ -1324,6 +1444,16 @@ refs.levelupText.innerHTML = `
       if (!GAME.inCombat || GAME.isResolvingRound) return;
       const hero = getActiveHero();
       if (!hero || hero.hp <= 0) return;
+      if (hero.className === 'Mage' && (type === 'attack' || type === 'heavy')) {
+        const config = getActionConfig(hero, type);
+        if (hero.mana < config.cost) {
+          showEventModal(
+            'Mana insuffisant',
+            `<strong>${hero.name}</strong> n'a pas assez d'énergie pour utiliser <strong>${config.title}</strong>.<br><br>Coût : ${config.cost} mana<br>Disponible : ${Math.max(0, Math.floor(hero.mana))} mana`
+          );
+          return;
+        }
+      }
       if (type === 'skill') {
         const cost = CLASS_DATA[hero.className].skillCost;
         if (hero.mana < cost) {
@@ -1340,12 +1470,7 @@ refs.levelupText.innerHTML = `
         type,
       });
 
-      const actionName = {
-        attack: 'Attaque',
-        heavy: 'Attaque puissante',
-        block: 'Encaisser',
-        skill: CLASS_DATA[hero.className].skillName,
-      }[type] || type;
+      const actionName = actionLabelForType(hero, type);
 
       addLog(`${hero.name} prépare : <strong>${actionName}</strong>.`, 'info');
       GAME.heroesChosenThisRound += 1;
@@ -1384,6 +1509,7 @@ refs.levelupText.innerHTML = `
       if (GAME.currentEnemy && GAME.currentEnemy.hp <= 0) {
         victory();
       } else {
+        tickHeroStatusesAfterEnemyTurn();
         let ready = consumeStunsForNextRound();
         if (!ready.length && getAliveHeroes().length) {
           addLog('Aucun héros n’est en état d’agir. L’ennemi conserve l’initiative.', 'loss');
@@ -1416,6 +1542,13 @@ refs.levelupText.innerHTML = `
         return;
       }
 
+      if (hero.className === 'Mage' && type === 'attack') {
+        hero.mana -= 3;
+      }
+      if (hero.className === 'Mage' && type === 'heavy') {
+        hero.mana -= 5;
+      }
+
       if (type === 'skill') {
         const cost = CLASS_DATA[hero.className].skillCost;
         if (hero.mana < cost) {
@@ -1429,19 +1562,32 @@ refs.levelupText.innerHTML = `
       let hitChance = 88;
       let baseDamage = roll(Math.max(1, derived.atk - 4), derived.atk + 3);
       let critBonus = false;
+      const spellPower = getMageSpellPower(hero);
+
+      if (hero.className === 'Mage' && type === 'attack') {
+        baseDamage = roll(Math.max(1, spellPower - 4), spellPower + 3);
+      }
 
       if (type === 'heavy') {
         hitChance = 65;
-        baseDamage = roll(derived.atk + 1, derived.atk + 11);
+        baseDamage = hero.className === 'Mage'
+          ? roll(spellPower + 1, spellPower + 11)
+          : roll(derived.atk + 1, derived.atk + 11);
       }
 
       if (type === 'skill') {
         if (hero.className === 'Guerrier') {
-          baseDamage = roll(derived.atk + 4, derived.atk + 10);
+          baseDamage = Math.floor(roll(Math.max(1, derived.atk - 4), derived.atk + 3) * 1.4);
+          hero.atkBuffTurns = 3;
+          hero.atkBuffPct = 0.2;
           hero.defending = true;
         }
         if (hero.className === 'Mage') {
-          baseDamage = roll(derived.atk + 8, derived.atk + 18) + Math.floor(hero.stats.MANA * 1.4);
+          const blizzardBase = roll(Math.max(1, spellPower - 4), spellPower + 3);
+          baseDamage = Math.floor(blizzardBase * 1.7);
+          GAME.currentEnemy.burnTurns = 3;
+          GAME.currentEnemy.burnPct = 5;
+          GAME.currentEnemy.burnDamage = 0;
         }
         if (hero.className === 'Assassin') {
           baseDamage = Math.floor(roll(derived.atk + 5, derived.atk + 13) * 1.2);
@@ -1452,17 +1598,23 @@ refs.levelupText.innerHTML = `
           }
         }
         if (hero.className === 'Gardien') {
-          baseDamage = roll(derived.atk + 1, derived.atk + 6);
-          const drainedEnergy = Math.min(GAME.currentEnemy.mana || 0, 8 + Math.floor(hero.level / 2));
-          GAME.currentEnemy.mana = Math.max(0, (GAME.currentEnemy.mana || 0) - drainedEnergy);
+          baseDamage = Math.max(1, Math.floor(roll(Math.max(1, derived.atk - 4), derived.atk + 3) * 0.6));
           const debuffStats = ['FOR', 'RAP', 'CON', 'MANA'];
           const chosenStat = debuffStats[Math.floor(Math.random() * debuffStats.length)];
-          GAME.currentEnemy.statDebuffTurns = 3;
-          GAME.currentEnemy.statDebuff = {
+          const statDebuff = {
             stat: chosenStat,
-            amount: Math.max(2, Math.floor(hero.level / 3) + 2),
+            amount: Math.max(1, Math.floor((GAME.currentEnemy.stats?.[chosenStat] || 1) * 0.2)),
+            pct: 20,
+            turns: 3,
           };
-          GAME.currentEnemy.lastHydraDrain = drainedEnergy;
+          GAME.currentEnemy.statDebuffs = Array.isArray(GAME.currentEnemy.statDebuffs) ? GAME.currentEnemy.statDebuffs : [];
+          GAME.currentEnemy.statDebuffs.push(statDebuff);
+          GAME.currentEnemy.statDebuffTurns = GAME.currentEnemy.statDebuffs.reduce((max, debuff) => Math.max(max, debuff.turns || 0), 0);
+          GAME.currentEnemy.statDebuff = statDebuff;
+          GAME.currentEnemy.statDebuffPct = statDebuff.pct;
+          GAME.currentEnemy.energyDrainTurns = 3;
+          GAME.currentEnemy.energyDrainAmount = 0;
+          GAME.currentEnemy.energyDrainPct = 10;
           hero.defending = true;
         }
       } else if (roll(1, 100) <= derived.crit) {
@@ -1491,11 +1643,15 @@ refs.levelupText.innerHTML = `
 
       GAME.lastRoundHeroActions[hero.id] = { label: actionLabel, value: `${finalDamage} dégâts`, critical: critBonus };
       addLog(`${hero.name} utilise <strong>${actionLabel}</strong> et inflige <strong>${finalDamage}</strong> dégâts.${critBonus ? ' <span class="critical">CRITIQUE !</span>' : ''}`, critBonus ? 'critical' : '');
+      if (type === 'skill' && hero.className === 'Guerrier') {
+        addLog(`${hero.name} gagne <strong>ATK +20%</strong> pendant <strong>3 tours</strong>.`, 'info');
+      }
+      if (type === 'skill' && hero.className === 'Mage') {
+        addLog(`${GAME.currentEnemy.name} subit une <strong>Brûlure</strong> pendant <strong>3 tours</strong>.`, 'info');
+      }
       if (type === 'skill' && hero.className === 'Gardien') {
         const debuff = GAME.currentEnemy.statDebuff;
-        const manaLost = GAME.currentEnemy.lastHydraDrain || 0;
-        addLog(`${GAME.currentEnemy.name} perd <strong>${manaLost}</strong> énergie et subit <strong>-${debuff.amount} ${debuff.stat}</strong> pendant <strong>3 tours</strong>.`, 'info');
-        GAME.currentEnemy.lastHydraDrain = 0;
+        addLog(`${GAME.currentEnemy.name} perdra <strong>10%</strong> de son énergie max par tour et subit <strong>-${debuff.pct}% ${debuff.stat}</strong> pendant <strong>3 tours</strong>.`, 'info');
       }
       shakeElement(refs.enemyCard);
       renderEnemySection();
@@ -1806,18 +1962,19 @@ refs.levelupText.innerHTML = `
     function gameOver() {
       GAME.inCombat = false;
       GAME.currentEnemy = null;
-      showEventModal(
-        'Défaite',
-        `<strong>Toute l'équipe a succombé dans le donjon.</strong><br><br>Progression atteinte : salle ${GAME.roomsCleared}.`,
-        () => {
-          addLog('<strong>Toute l\'équipe a succombé dans le donjon.</strong>', 'loss');
-          renderGame();
-        }
-      );
+      GAME.pendingActions = [];
+      GAME.heroesChosenThisRound = 0;
+      GAME.lastEnemyAction = '';
+      GAME.isReviving = true;
+      GAME.reviveEndsAt = Date.now() + 60000;
+      addLog('<strong>Toute l\'équipe a succombé dans le donjon.</strong>', 'loss');
+      saveGameState();
+      resumeRevive();
+      renderGame();
     }
 
     function explore() {
-      if (GAME.inCombat || GAME.isResting || GAME.isLevelingUp) return;
+      if (GAME.inCombat || GAME.isResting || GAME.isReviving || GAME.isLevelingUp) return;
       GAME.roomsCleared += 1;
       const eventRoll = roll(1, 100);
       if (eventRoll <= 64) return startCombat();
@@ -1884,10 +2041,13 @@ refs.levelupText.innerHTML = `
       return `${minutes}:${seconds}`;
     }
 
-    function updateRestModal(timeLeftSeconds) {
+    function updateRecoveryModal(mode, timeLeftSeconds) {
+      const message = mode === 'revive'
+        ? 'Vous allez être ressuscité'
+        : 'Vous vous reposez';
       refs.modalOverlay.classList.add('show');
       refs.restModal.classList.add('show');
-      refs.restText.innerHTML = `Vous vous reposez.<br>Temps d'attente : <strong>${formatCountdown(timeLeftSeconds)}</strong>`;
+      refs.restText.innerHTML = `${message} :<br>Temps d'attente : <strong>${formatCountdown(timeLeftSeconds)}</strong>`;
     }
 
     function finishRest() {
@@ -1902,6 +2062,22 @@ refs.levelupText.innerHTML = `
       renderGame();
     }
 
+    function finishRevive() {
+      if (GAME.restInterval) clearInterval(GAME.restInterval);
+      GAME.restInterval = null;
+      GAME.party.forEach((hero) => {
+        hero.stunnedTurns = 0;
+        hero.defending = false;
+        syncHeroCaps(hero, true);
+      });
+      GAME.isReviving = false;
+      GAME.reviveEndsAt = null;
+      refs.modalOverlay.classList.remove('show');
+      refs.restModal.classList.remove('show');
+      addLog('La compagnie revient à la vie. PV et énergie restaurés.', 'gain');
+      renderGame();
+    }
+
     function resumeRest() {
       if (!GAME.isResting || !GAME.restEndsAt) return;
       if (GAME.restInterval) clearInterval(GAME.restInterval);
@@ -1912,7 +2088,24 @@ refs.levelupText.innerHTML = `
           finishRest();
           return;
         }
-        updateRestModal(timeLeftSeconds);
+        updateRecoveryModal('rest', timeLeftSeconds);
+      };
+
+      tick();
+      GAME.restInterval = setInterval(tick, 1000);
+    }
+
+    function resumeRevive() {
+      if (!GAME.isReviving || !GAME.reviveEndsAt) return;
+      if (GAME.restInterval) clearInterval(GAME.restInterval);
+
+      const tick = () => {
+        const timeLeftSeconds = Math.max(0, Math.ceil((GAME.reviveEndsAt - Date.now()) / 1000));
+        if (timeLeftSeconds <= 0) {
+          finishRevive();
+          return;
+        }
+        updateRecoveryModal('revive', timeLeftSeconds);
       };
 
       tick();
@@ -1920,9 +2113,9 @@ refs.levelupText.innerHTML = `
     }
 
     function rest() {
-      if (GAME.inCombat || GAME.isResting || GAME.isLevelingUp) return;
+      if (GAME.inCombat || GAME.isResting || GAME.isReviving || GAME.isLevelingUp) return;
       GAME.isResting = true;
-      GAME.restEndsAt = Date.now() + 10000;
+      GAME.restEndsAt = Date.now() + 30000;
       saveGameState();
       resumeRest();
     }
@@ -2032,6 +2225,8 @@ refs.levelupText.innerHTML = `
         heroesChosenThisRound: GAME.heroesChosenThisRound,
         isResting: GAME.isResting,
         restEndsAt: GAME.restEndsAt,
+        isReviving: GAME.isReviving,
+        reviveEndsAt: GAME.reviveEndsAt,
         pendingLevelUpIds: GAME.pendingLevelUps.map((hero) => hero.id),
         updatedAt: Date.now(),
       };
@@ -2070,11 +2265,17 @@ refs.levelupText.innerHTML = `
       GAME.heroesChosenThisRound = state.heroesChosenThisRound || 0;
       GAME.isResting = !!state.isResting;
       GAME.restEndsAt = state.restEndsAt || null;
+      GAME.isReviving = !!state.isReviving;
+      GAME.reviveEndsAt = state.reviveEndsAt || null;
       GAME.pendingLevelUps = (state.pendingLevelUpIds || []).map((heroId) => GAME.party.find((hero) => hero.id === heroId)).filter(Boolean);
       GAME.isLevelingUp = false;
       GAME.pendingModalAction = null;
       GAME.party.forEach((hero) => syncHeroCaps(hero, false));
       GAME.party.forEach((hero) => { hero.stunnedTurns = hero.stunnedTurns || 0; });
+      GAME.party.forEach((hero) => {
+        hero.atkBuffTurns = hero.atkBuffTurns || 0;
+        hero.atkBuffPct = hero.atkBuffPct || 0;
+      });
       if (GAME.currentEnemy) {
         GAME.currentEnemy = upgradeEnemyState(GAME.currentEnemy);
       }
@@ -2100,6 +2301,8 @@ refs.levelupText.innerHTML = `
       GAME.isResolvingRound = false;
       GAME.isResting = false;
       GAME.restEndsAt = null;
+      GAME.isReviving = false;
+      GAME.reviveEndsAt = null;
       GAME.pendingLevelUps = [];
       GAME.isLevelingUp = false;
       GAME.pendingModalAction = null;
@@ -2155,7 +2358,9 @@ refs.levelupText.innerHTML = `
       if (refs.log) refs.log.innerHTML = '';
       addLog('La compagnie reprend sa progression dans le donjon.', 'info');
       renderGame();
-      if (GAME.isResting && GAME.restEndsAt) {
+      if (GAME.isReviving && GAME.reviveEndsAt) {
+        resumeRevive();
+      } else if (GAME.isResting && GAME.restEndsAt) {
         resumeRest();
       } else if (GAME.pendingLevelUps.length) {
         processNextLevelUp();
