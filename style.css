@@ -718,6 +718,16 @@
       font-size: 0.86rem;
       line-height: 1.35;
     }
+    .status-line {
+      display: inline-block;
+      font-weight: 700;
+    }
+    .status-bonus {
+      color: #74b9ff;
+    }
+    .status-malus {
+      color: #ff7675;
+    }
     .combat-stat-line {
       display: flex;
       justify-content: space-between;
@@ -1008,13 +1018,14 @@
 
 /* TURN POPUP */
 .turn-popup {
-  position: absolute;
+  position: fixed;
   inset: 0;
   display: flex;
   justify-content: center;
   align-items: center;
-  background: rgba(0,0,0,0.75);
-  font-size: 48px;
+  background: rgba(0,0,0,0.55);
+  padding: 24px;
+  font-size: 28px;
   font-weight: bold;
   text-align: center;
   color: #f1c40f;
@@ -1023,9 +1034,26 @@
   animation: turnFade 1.2s forwards;
 }
 
+.turn-popup::before {
+  content: '';
+  position: absolute;
+  width: min(92%, 720px);
+  height: min(160px, 28%);
+  border-radius: 16px;
+  border: 2px solid rgba(243, 156, 18, 0.45);
+  background: rgba(20, 20, 20, 0.9);
+  box-shadow: 0 0 32px rgba(0,0,0,0.45);
+}
+
+.turn-popup > * {
+  position: relative;
+  z-index: 1;
+  max-width: min(86%, 620px);
+}
+
 .turn-name {
   color: #f1c40f;
-  text-shadow: 0 0 20px rgba(241,196,15,0.9);
+  text-shadow: 0 0 16px rgba(241,196,15,0.75);
 }
 
 @keyframes turnFade {

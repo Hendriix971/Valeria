@@ -35,7 +35,7 @@
       stats: { FOR: 5, CON: 5, RAP: 5, MANA: 5 }
     };
 
-    const BESTIARY = [
+    const LEGACY_BESTIARY = [
       { name: 'Gobelin', hp: 34, dmgMin: 4, dmgMax: 7, xp: 34, sprite: '👺', level: 1 },
       { name: 'Loup affamé', hp: 30, dmgMin: 5, dmgMax: 8, xp: 36, sprite: '🐺', level: 1 },
       { name: 'Squelette', hp: 44, dmgMin: 6, dmgMax: 10, xp: 52, sprite: '💀', level: 2 },
@@ -45,20 +45,63 @@
       { name: 'Dragon ancien', hp: 240, dmgMin: 18, dmgMax: 30, xp: 550, sprite: '🐲', level: 8, boss: true }
     ];
 
+    const ENEMY_ARCHETYPE_MODS = {
+      Brute: { hp: 10, atk: 3, def: 0, evasion: 0, crit: 2, mana: 0, magic: 0 },
+      Rapide: { hp: -2, atk: 1, def: 0, evasion: 7, crit: 8, mana: 0, magic: 0 },
+      Tank: { hp: 30, atk: 0, def: 5, evasion: -1, crit: 0, mana: 4, magic: 0 },
+      Mage: { hp: -4, atk: 0, def: 1, evasion: 2, crit: 2, mana: 18, magic: 8 },
+    };
+
+    const ENEMY_ARCHETYPE_WEIGHTS = {
+      Brute: { FOR: 0.4, RAP: 0.2, CON: 0.3, MANA: 0.1 },
+      Rapide: { FOR: 0.25, RAP: 0.4, CON: 0.2, MANA: 0.15 },
+      Tank: { FOR: 0.25, RAP: 0.15, CON: 0.45, MANA: 0.15 },
+      Mage: { FOR: 0.15, RAP: 0.2, CON: 0.2, MANA: 0.45 },
+    };
+
+    const BESTIARY = [
+      { name: 'Gobelin', sprite: '👺', level: 1, xp: 34, archetype: 'Rapide', stats: { FOR: 4, RAP: 7, CON: 4, MANA: 2 }, skill: { name: 'Coup vicieux', cost: 6, type: 'rush' } },
+      { name: 'Loup affamé', sprite: '🐺', level: 1, xp: 36, archetype: 'Rapide', stats: { FOR: 5, RAP: 8, CON: 4, MANA: 1 }, skill: { name: 'Bond sauvage', cost: 6, type: 'rush' } },
+      { name: 'Slime', sprite: '🟢', level: 1, xp: 40, archetype: 'Tank', stats: { FOR: 3, RAP: 2, CON: 8, MANA: 5 }, skill: { name: 'Gel régénérant', cost: 7, type: 'heal' } },
+      { name: 'Squelette', sprite: '💀', level: 2, xp: 52, archetype: 'Brute', stats: { FOR: 6, RAP: 4, CON: 5, MANA: 2 }, skill: { name: 'Frappe ossuaire', cost: 7, type: 'smash' } },
+      { name: 'Ours', sprite: '🐻', level: 2, xp: 58, archetype: 'Brute', stats: { FOR: 8, RAP: 3, CON: 7, MANA: 1 }, skill: { name: 'Étreinte sauvage', cost: 7, type: 'smash' } },
+      { name: 'Squelette archer', sprite: '🏹', level: 2, xp: 56, archetype: 'Rapide', stats: { FOR: 5, RAP: 8, CON: 4, MANA: 3 }, skill: { name: 'Flèche perforante', cost: 6, type: 'rush' } },
+      { name: 'Orc de sang', sprite: '👹', level: 3, xp: 88, archetype: 'Brute', stats: { FOR: 9, RAP: 4, CON: 7, MANA: 2 }, skill: { name: 'Rage carnassière', cost: 8, type: 'smash' } },
+      { name: 'Scolopendre géante', sprite: '🪲', level: 3, xp: 92, archetype: 'Rapide', stats: { FOR: 7, RAP: 9, CON: 5, MANA: 3 }, skill: { name: 'Venin corrosif', cost: 7, type: 'venom' } },
+      { name: 'Gargouille', sprite: '🗿', level: 3, xp: 96, archetype: 'Tank', stats: { FOR: 6, RAP: 4, CON: 9, MANA: 3 }, skill: { name: 'Cuirasse de pierre', cost: 8, type: 'fortify' } },
+      { name: 'Spectre', sprite: '👻', level: 4, xp: 120, archetype: 'Mage', stats: { FOR: 4, RAP: 6, CON: 5, MANA: 9 }, skill: { name: 'Drain spectral', cost: 8, type: 'spell' } },
+      { name: 'Sorcière', sprite: '🧙', level: 4, xp: 124, archetype: 'Mage', stats: { FOR: 3, RAP: 5, CON: 5, MANA: 11 }, skill: { name: 'Maléfice siphonnant', cost: 9, type: 'hex' } },
+      { name: 'Manticore', sprite: '🦂', level: 4, xp: 132, archetype: 'Rapide', stats: { FOR: 8, RAP: 8, CON: 6, MANA: 4 }, skill: { name: 'Piqûre caudale', cost: 8, type: 'venom' } },
+      { name: 'Squelette chevalier', sprite: '🛡️', level: 5, xp: 150, archetype: 'Tank', stats: { FOR: 7, RAP: 4, CON: 10, MANA: 4 }, skill: { name: 'Rempart d’os', cost: 8, type: 'fortify' } },
+      { name: 'Chevalier noir', sprite: '🛡️', level: 5, xp: 170, archetype: 'Tank', stats: { FOR: 8, RAP: 5, CON: 11, MANA: 5 }, skill: { name: 'Bastion maudit', cost: 9, type: 'fortify' } },
+      { name: 'Roi Lion', sprite: '🦁', level: 8, xp: 540, archetype: 'Brute', stats: { FOR: 14, RAP: 8, CON: 11, MANA: 4 }, skill: { name: 'Rafale bestiale', cost: 10, type: 'rush' }, boss: true },
+      { name: 'Golem', sprite: '🪨', level: 6, xp: 210, archetype: 'Tank', stats: { FOR: 9, RAP: 2, CON: 13, MANA: 4 }, skill: { name: 'Peau de granit', cost: 9, type: 'fortify' } },
+      { name: 'Ange déchu', sprite: '😇', level: 6, xp: 220, archetype: 'Mage', stats: { FOR: 6, RAP: 6, CON: 8, MANA: 12 }, skill: { name: 'Rayon du jugement', cost: 10, type: 'spell' } },
+      { name: 'Dante l\'ange déchu', sprite: '😇', level: 8, xp: 560, archetype: 'Rapide', stats: { FOR: 9, RAP: 14, CON: 9, MANA: 10 }, skill: { name: 'Aile du jugement', cost: 10, type: 'rush' }, boss: true },
+      { name: 'Démon', sprite: '😈', level: 7, xp: 240, archetype: 'Brute', stats: { FOR: 12, RAP: 6, CON: 10, MANA: 5 }, skill: { name: 'Griffe infernale', cost: 9, type: 'smash' } },
+      { name: 'Hydre', sprite: '🐍', level: 8, xp: 520, archetype: 'Tank', stats: { FOR: 11, RAP: 6, CON: 14, MANA: 10 }, skill: { name: 'Tête paralysante', cost: 11, type: 'stun' }, boss: true },
+      { name: 'Dragon ancien', sprite: '🐲', level: 9, xp: 580, archetype: 'Mage', stats: { FOR: 12, RAP: 7, CON: 13, MANA: 14 }, skill: { name: 'Souffle antique', cost: 12, type: 'spell' }, boss: true }
+    ];
+
     const WEAPONS = [
-      { name: 'Dague rouillée', type: 'weapon', slot: 'weapon', atk: 2, rarity: 'Commun', icon: '🗡️' },
-      { name: 'Épée longue', type: 'weapon', slot: 'weapon', atk: 4, rarity: 'Commun', icon: '⚔️' },
-      { name: 'Bâton runique', type: 'weapon', slot: 'weapon', atk: 5, mana: 4, rarity: 'Rare', icon: '🪄' },
-      { name: 'Lame de l’ombre', type: 'weapon', slot: 'weapon', atk: 7, crit: 6, rarity: 'Rare', icon: '🗡️' },
-      { name: 'Claymore royale', type: 'weapon', slot: 'weapon', atk: 9, def: 2, rarity: 'Épique', icon: '⚔️' }
+      { name: 'Dague rouillée', type: 'weapon', slot: 'weapon', atk: 2, rarity: 'Commun', icon: '🗡️', weaponType: 'dague', itemLevel: 1 },
+      { name: 'Épée longue', type: 'weapon', slot: 'weapon', atk: 4, rarity: 'Commun', icon: '⚔️', weaponType: 'épée', itemLevel: 1 },
+      { name: 'Masse de guerre', type: 'weapon', slot: 'weapon', atk: 5, def: 1, rarity: 'Commun', icon: '🔨', weaponType: 'masse', itemLevel: 1 },
+      { name: 'Katana du vent', type: 'weapon', slot: 'weapon', atk: 5, crit: 4, rarity: 'Rare', icon: '🗡️', weaponType: 'katana', itemLevel: 1 },
+      { name: 'Bâton runique', type: 'weapon', slot: 'weapon', atk: 5, mana: 4, rarity: 'Rare', icon: '🪄', weaponType: 'bâton', itemLevel: 1 },
+      { name: 'Sceptre astral', type: 'weapon', slot: 'weapon', atk: 4, mana: 6, crit: 2, rarity: 'Rare', icon: '🔱', weaponType: 'sceptre', itemLevel: 1 },
+      { name: 'Grimoire scellé', type: 'weapon', slot: 'weapon', atk: 3, mana: 8, def: 1, rarity: 'Rare', icon: '📕', weaponType: 'grimoire', itemLevel: 1 },
+      { name: 'Lame de l’ombre', type: 'weapon', slot: 'weapon', atk: 7, crit: 6, rarity: 'Rare', icon: '🗡️', weaponType: 'dague', itemLevel: 1 },
+      { name: 'Claymore royale', type: 'weapon', slot: 'weapon', atk: 9, def: 2, rarity: 'Épique', icon: '⚔️', weaponType: 'épée', itemLevel: 1 },
+      { name: 'Marteau du rempart', type: 'weapon', slot: 'weapon', atk: 8, def: 3, rarity: 'Épique', icon: '🔨', weaponType: 'masse', itemLevel: 1 }
     ];
 
     const ARMORS = [
-      { name: 'Tunique renforcée', type: 'armor', slot: 'armor', def: 2, rarity: 'Commun', icon: '🛡️' },
-      { name: 'Armure de cuir', type: 'armor', slot: 'armor', def: 4, evasion: 3, rarity: 'Commun', icon: '🧥' },
-      { name: 'Robe mystique', type: 'armor', slot: 'armor', def: 3, mana: 6, rarity: 'Rare', icon: '🪶' },
-      { name: 'Cotte d’acier', type: 'armor', slot: 'armor', def: 6, rarity: 'Rare', icon: '🛡️' },
-      { name: 'Armure du gardien', type: 'armor', slot: 'armor', def: 8, hp: 20, rarity: 'Épique', icon: '🛡️' }
+      { name: 'Tunique renforcée', type: 'armor', slot: 'armor', def: 2, rarity: 'Commun', icon: '🛡️', itemLevel: 1 },
+      { name: 'Armure de cuir', type: 'armor', slot: 'armor', def: 4, evasion: 3, rarity: 'Commun', icon: '🧥', itemLevel: 1 },
+      { name: 'Robe mystique', type: 'armor', slot: 'armor', def: 3, mana: 6, rarity: 'Rare', icon: '🪶', itemLevel: 1 },
+      { name: 'Cotte d’acier', type: 'armor', slot: 'armor', def: 6, rarity: 'Rare', icon: '🛡️', itemLevel: 1 },
+      { name: 'Armure du gardien', type: 'armor', slot: 'armor', def: 8, hp: 20, rarity: 'Épique', icon: '🛡️', itemLevel: 1 }
     ];
 
     const SAVE_KEY = 'valeria_faux_multi_save_v1';
@@ -331,6 +374,130 @@
       return { maxHp, maxMana, atk, def, evasion, crit };
     }
 
+    function getEnemyDerived(enemy) {
+      const baseStats = enemy.stats || { FOR: 5, RAP: 5, CON: 5, MANA: 5 };
+      const debuff = enemy.statDebuffTurns > 0 ? enemy.statDebuff : null;
+      const stats = {
+        FOR: Math.max(1, baseStats.FOR - (debuff?.stat === 'FOR' ? debuff.amount : 0)),
+        RAP: Math.max(1, baseStats.RAP - (debuff?.stat === 'RAP' ? debuff.amount : 0)),
+        CON: Math.max(1, baseStats.CON - (debuff?.stat === 'CON' ? debuff.amount : 0)),
+        MANA: Math.max(1, baseStats.MANA - (debuff?.stat === 'MANA' ? debuff.amount : 0)),
+      };
+      const mods = ENEMY_ARCHETYPE_MODS[enemy.archetype] || {};
+      const roomScale = enemy.roomScale || 0;
+      const fortify = enemy.fortifyTurns > 0 ? (enemy.fortifyAmount || 0) : 0;
+      const maxHp = Math.max(24, 34 + stats.CON * 12 + enemy.level * 10 + roomScale * 5 + (mods.hp || 0));
+      const maxMana = Math.max(0, 10 + stats.MANA * 8 + enemy.level * 4 + roomScale * 2 + (mods.mana || 0));
+      const atk = Math.max(2, 4 + stats.FOR * 2 + enemy.level + Math.floor(roomScale / 2) + (mods.atk || 0));
+      const def = Math.max(0, Math.floor(stats.CON * 0.9) + Math.floor(enemy.level / 2) + (mods.def || 0) + fortify);
+      const evasion = Math.min(42, Math.max(0, 2 + stats.RAP * 2 + Math.floor(enemy.level / 3) + (mods.evasion || 0)));
+      const crit = Math.min(40, Math.max(0, 3 + Math.floor(stats.RAP * 1.4) + (mods.crit || 0)));
+      const magicPower = Math.max(0, 2 + stats.MANA * 2 + enemy.level + Math.floor(roomScale / 2) + (mods.magic || 0));
+      const dmgMin = Math.max(1, atk - 4);
+      const dmgMax = Math.max(dmgMin + 1, atk + 4 + Math.floor(stats.FOR / 2));
+      return { maxHp, maxMana, atk, def, evasion, crit, magicPower, dmgMin, dmgMax };
+    }
+
+    function getEnemyTemplateByName(name) {
+      return BESTIARY.find((enemy) => enemy.name === name) || null;
+    }
+
+    function buildEnemyDescription(enemy) {
+      if (!enemy) return '';
+      const skillName = enemy.skill?.name || 'attaque spéciale';
+      const base = {
+        Brute: 'frappe fort et cherche le duel direct',
+        Rapide: 'mise sur la vitesse et les ouvertures',
+        Tank: 'encaisse et verrouille le combat',
+        Mage: 'canalise une énergie dangereuse',
+      }[enemy.archetype] || 'rôde dans le donjon';
+      return `${enemy.archetype} — ${base}. Sort : ${skillName}.`;
+    }
+
+    function getPartyStatBudget() {
+      const total = { FOR: 0, RAP: 0, CON: 0, MANA: 0 };
+      GAME.party.forEach((hero) => {
+        total.FOR += hero.stats?.FOR || 0;
+        total.RAP += hero.stats?.RAP || 0;
+        total.CON += hero.stats?.CON || 0;
+        total.MANA += hero.stats?.MANA || 0;
+      });
+      return total;
+    }
+
+    function buildEnemyStatsFromParty(archetype) {
+      const budget = getPartyStatBudget();
+      const totalPoints = Math.max(4, budget.FOR + budget.RAP + budget.CON + budget.MANA);
+      const weights = ENEMY_ARCHETYPE_WEIGHTS[archetype] || ENEMY_ARCHETYPE_WEIGHTS.Brute;
+      const stats = {
+        FOR: Math.max(1, Math.floor(totalPoints * weights.FOR)),
+        RAP: Math.max(1, Math.floor(totalPoints * weights.RAP)),
+        CON: Math.max(1, Math.floor(totalPoints * weights.CON)),
+        MANA: Math.max(1, Math.floor(totalPoints * weights.MANA)),
+      };
+      let assigned = stats.FOR + stats.RAP + stats.CON + stats.MANA;
+      const order = Object.entries(weights).sort((a, b) => b[1] - a[1]).map(([stat]) => stat);
+      let cursor = 0;
+      while (assigned < totalPoints) {
+        stats[order[cursor % order.length]] += 1;
+        assigned += 1;
+        cursor += 1;
+      }
+      return stats;
+    }
+
+    function primeEnemy(template, referenceLevel) {
+      const enemy = clone(template);
+      const roomScale = Math.floor(GAME.roomsCleared / 4);
+      const levelBoost = Math.max(0, Math.floor((referenceLevel - enemy.level) / 2)) + Math.floor(GAME.roomsCleared / 6);
+      enemy.level += levelBoost;
+      enemy.roomScale = roomScale;
+      enemy.stats = buildEnemyStatsFromParty(enemy.archetype);
+      enemy.guardBreakTurns = 0;
+      enemy.guardBreakAmount = 0;
+      enemy.fortifyTurns = 0;
+      enemy.fortifyAmount = 0;
+      enemy.statDebuffTurns = 0;
+      enemy.statDebuff = null;
+      enemy.description = buildEnemyDescription(enemy);
+      const derived = getEnemyDerived(enemy);
+      enemy.maxHp = derived.maxHp;
+      enemy.hp = derived.maxHp;
+      enemy.maxMana = derived.maxMana;
+      enemy.mana = derived.maxMana;
+      enemy.xp = Math.round(enemy.xp + enemy.level * 8 + roomScale * 6);
+      return enemy;
+    }
+
+    function upgradeEnemyState(savedEnemy) {
+      if (!savedEnemy) return null;
+      const template = getEnemyTemplateByName(savedEnemy.name) || BESTIARY[0];
+      const enemy = { ...clone(template), ...clone(savedEnemy) };
+      enemy.stats = clone(savedEnemy.stats || template.stats || buildEnemyStatsFromParty(enemy.archetype));
+      enemy.skill = clone(savedEnemy.skill || template.skill);
+      enemy.archetype = savedEnemy.archetype || template.archetype;
+      enemy.guardBreakTurns = savedEnemy.guardBreakTurns || 0;
+      enemy.guardBreakAmount = savedEnemy.guardBreakAmount || 0;
+      enemy.fortifyTurns = savedEnemy.fortifyTurns || 0;
+      enemy.fortifyAmount = savedEnemy.fortifyAmount || 0;
+      enemy.statDebuffTurns = savedEnemy.statDebuffTurns || 0;
+      enemy.statDebuff = savedEnemy.statDebuff || null;
+      enemy.roomScale = savedEnemy.roomScale || Math.floor((GAME.roomsCleared || 0) / 4);
+      enemy.description = savedEnemy.description || buildEnemyDescription(enemy);
+      const derived = getEnemyDerived(enemy);
+      if (savedEnemy.maxHp && !savedEnemy.stats) {
+        const ratio = savedEnemy.maxHp > 0 ? Math.max(0, Math.min(1, (savedEnemy.hp || savedEnemy.maxHp) / savedEnemy.maxHp)) : 1;
+        enemy.maxHp = derived.maxHp;
+        enemy.hp = Math.max(0, Math.round(enemy.maxHp * ratio));
+      } else {
+        enemy.maxHp = savedEnemy.maxHp || derived.maxHp;
+        enemy.hp = Math.min(enemy.maxHp, savedEnemy.hp ?? enemy.maxHp);
+      }
+      enemy.maxMana = savedEnemy.maxMana || derived.maxMana;
+      enemy.mana = Math.min(enemy.maxMana, savedEnemy.mana ?? enemy.maxMana);
+      return enemy;
+    }
+
     function syncHeroCaps(hero, fillResources = false) {
       const derived = getHeroDerived(hero);
       hero.maxHp = derived.maxHp;
@@ -347,11 +514,11 @@
 
     function createStartingGear(className) {
       const gear = [];
-      if (className === 'Guerrier') gear.push({ name: 'Épée du recrue', type: 'weapon', slot: 'weapon', atk: 3, rarity: 'Départ', icon: '⚔️' });
-      if (className === 'Mage') gear.push({ name: 'Bâton d’apprenti', type: 'weapon', slot: 'weapon', atk: 2, mana: 5, rarity: 'Départ', icon: '🪄' });
-      if (className === 'Assassin') gear.push({ name: 'Dagues jumelles', type: 'weapon', slot: 'weapon', atk: 3, crit: 4, rarity: 'Départ', icon: '🗡️' });
-      if (className === 'Gardien') gear.push({ name: 'Masse du rempart', type: 'weapon', slot: 'weapon', atk: 2, def: 2, rarity: 'Départ', icon: '🛡️' });
-      gear.push({ name: 'Tenue de voyage', type: 'armor', slot: 'armor', def: 1, rarity: 'Départ', icon: '🛡️' });
+      if (className === 'Guerrier') gear.push({ name: 'Épée de recrue', type: 'weapon', slot: 'weapon', atk: 3, rarity: 'Départ', icon: '⚔️', weaponType: 'épée', itemLevel: 1 });
+      if (className === 'Mage') gear.push({ name: 'Bâton d’apprenti', type: 'weapon', slot: 'weapon', atk: 2, mana: 5, rarity: 'Départ', icon: '🪄', weaponType: 'bâton', itemLevel: 1 });
+      if (className === 'Assassin') gear.push({ name: 'Dagues jumelles', type: 'weapon', slot: 'weapon', atk: 3, crit: 4, rarity: 'Départ', icon: '🗡️', weaponType: 'dague', itemLevel: 1 });
+      if (className === 'Gardien') gear.push({ name: 'Masse du rempart', type: 'weapon', slot: 'weapon', atk: 2, def: 2, rarity: 'Départ', icon: '🛡️', weaponType: 'masse', itemLevel: 1 });
+      gear.push({ name: 'Tenue de voyage', type: 'armor', slot: 'armor', def: 1, rarity: 'Départ', icon: '🛡️', itemLevel: 1 });
       return gear.map((item) => ({ ...clone(item), id: uid() }));
     }
 
@@ -364,6 +531,7 @@
 
     function itemDescription(item) {
       const bits = [];
+      if (item.itemLevel) bits.push(`Niv.${item.itemLevel}`);
       if (item.atk) bits.push(`+${item.atk} ATK`);
       if (item.def) bits.push(`+${item.def} DEF`);
       if (item.hp) bits.push(`+${item.hp} PV max`);
@@ -372,6 +540,37 @@
       if (item.evasion) bits.push(`+${item.evasion}% esquive`);
       if (item.type === 'consumable') bits.push(item.effectText || 'Consommable');
       return bits.join(' • ');
+    }
+
+    function getGroupLootLevel(enemy = null) {
+      const teamLevel = GAME.party.length
+        ? Math.max(1, Math.round(GAME.party.reduce((sum, hero) => sum + (hero.level || 1), 0) / GAME.party.length))
+        : 1;
+      return Math.max(teamLevel, enemy?.level || 1);
+    }
+
+    function scaleGearItem(template, itemLevel) {
+      const item = clone(template);
+      const level = Math.max(1, itemLevel || 1);
+      const scale = Math.max(0, level - 1);
+      item.itemLevel = level;
+      if (item.atk) item.atk += Math.floor(scale * 0.9) + (item.rarity === 'Épique' ? 2 : item.rarity === 'Rare' ? 1 : 0);
+      if (item.def) item.def += Math.floor(scale * 0.75) + (item.rarity === 'Épique' ? 1 : 0);
+      if (item.hp) item.hp += scale * 5;
+      if (item.mana) item.mana += scale * 3;
+      if (item.crit) item.crit += Math.floor(scale / 3);
+      if (item.evasion) item.evasion += Math.floor(scale / 3);
+      return item;
+    }
+
+    function createScaledConsumable(kind, itemLevel, quantity = 1) {
+      const level = Math.max(1, itemLevel || 1);
+      if (kind === 'heal') {
+        const heal = 35 + level * 4;
+        return { name: 'Potion de soin', type: 'consumable', stackable: true, quantity, heal, effectText: `Restaure ${heal} PV`, icon: '🧪', itemLevel: level };
+      }
+      const manaRestore = 30 + level * 3;
+      return { name: 'Potion de mana', type: 'consumable', stackable: true, quantity, manaRestore, effectText: `Restaure ${manaRestore} mana`, icon: '🔵', itemLevel: level };
     }
 
     function getDisplayedHero() {
@@ -388,6 +587,45 @@
 
     function getAliveIndexes() {
       return GAME.party.map((hero, index) => hero.hp > 0 ? index : -1).filter((index) => index !== -1);
+    }
+
+    function getReadyHeroIndexes() {
+      return GAME.party.map((hero, index) => (hero.hp > 0 && (hero.stunnedTurns || 0) <= 0 ? index : -1)).filter((index) => index !== -1);
+    }
+
+    function consumeStunsForNextRound() {
+      const readyIndexes = [];
+      GAME.party.forEach((hero, index) => {
+        if (hero.hp <= 0) return;
+        if ((hero.stunnedTurns || 0) > 0) {
+          hero.stunnedTurns -= 1;
+          GAME.lastRoundHeroActions[hero.id] = { label: 'Étourdi', value: 'Tour perdu', critical: false };
+          addLog(`${hero.name} est étourdi et ne peut pas agir ce tour.`, 'loss');
+          return;
+        }
+        readyIndexes.push(index);
+      });
+      return readyIndexes;
+    }
+
+    function tickEnemyStatusesAfterHeroesPhase() {
+      if (!GAME.currentEnemy) return;
+      if (GAME.currentEnemy.fortifyTurns > 0) {
+        GAME.currentEnemy.fortifyTurns -= 1;
+        if (GAME.currentEnemy.fortifyTurns <= 0) GAME.currentEnemy.fortifyAmount = 0;
+      }
+    }
+
+    function tickEnemyStatusesAfterEnemyTurn() {
+      if (!GAME.currentEnemy) return;
+      if (GAME.currentEnemy.guardBreakTurns > 0) {
+        GAME.currentEnemy.guardBreakTurns -= 1;
+        if (GAME.currentEnemy.guardBreakTurns <= 0) GAME.currentEnemy.guardBreakAmount = 0;
+      }
+      if (GAME.currentEnemy.statDebuffTurns > 0) {
+        GAME.currentEnemy.statDebuffTurns -= 1;
+        if (GAME.currentEnemy.statDebuffTurns <= 0) GAME.currentEnemy.statDebuff = null;
+      }
     }
 
     function renderSetupParty() {
@@ -512,6 +750,7 @@
           armor: inventory.find((item) => item.slot === 'armor') || null,
         },
         defending: false,
+        stunnedTurns: 0,
       };
       syncHeroCaps(hero, true);
       GAME.party.push(hero);
@@ -723,9 +962,6 @@ refs.levelupText.innerHTML = `
       const heroDerived = getHeroDerived(hero);
       refs.combatPlayerStats.innerHTML = `
         <div class="combat-panel-title">Héros actif</div>
-        <div class="combat-stat-line"><strong>Classe</strong><span>${hero.className}</span></div>
-        <div class="combat-stat-line"><strong>Niveau</strong><span>${hero.level}</span></div>
-        <div class="combat-stat-spacer"></div>
         <div class="combat-stat-line"><strong>FOR</strong><span>${hero.stats.FOR}</span></div>
         <div class="combat-stat-line"><strong>RAP</strong><span>${hero.stats.RAP}</span></div>
         <div class="combat-stat-line"><strong>CON</strong><span>${hero.stats.CON}</span></div>
@@ -746,15 +982,18 @@ refs.levelupText.innerHTML = `
         return;
       }
 
+      const enemyDerived = getEnemyDerived(enemy);
       refs.combatEnemyStats.innerHTML = `
         <div class="combat-panel-title">Ennemi</div>
-        <div class="combat-stat-line"><strong>Type</strong><span>${enemy.name}</span></div>
-        <div class="combat-stat-line"><strong>Niveau</strong><span>${enemy.level}</span></div>
+        <div class="combat-stat-line"><strong>FOR</strong><span>${enemy.stats.FOR}</span></div>
+        <div class="combat-stat-line"><strong>RAP</strong><span>${enemy.stats.RAP}</span></div>
+        <div class="combat-stat-line"><strong>CON</strong><span>${enemy.stats.CON}</span></div>
+        <div class="combat-stat-line"><strong>MANA</strong><span>${enemy.stats.MANA}</span></div>
         <div class="combat-stat-spacer"></div>
-        <div class="combat-stat-line is-atk"><strong>Dégâts</strong><span>${enemy.dmgMin}-${enemy.dmgMax}</span></div>
-        <div class="combat-stat-line is-def"><strong>PV restants</strong><span>${Math.max(0, Math.ceil(enemy.hp))}</span></div>
-        <div class="combat-stat-spacer"></div>
-        <div class="combat-stat-note">${enemy.description || 'Une créature du donjon se dresse devant vous.'}</div>
+        <div class="combat-stat-line is-atk"><strong>ATK</strong><span>${enemyDerived.atk}</span></div>
+        <div class="combat-stat-line is-def"><strong>DEF</strong><span>${enemyDerived.def}</span></div>
+        <div class="combat-stat-line is-crit"><strong>CRIT</strong><span>${enemyDerived.crit}%</span></div>
+        <div class="combat-stat-line is-esq"><strong>ESQ</strong><span>${enemyDerived.evasion}%</span></div>
       `;
     }
 
@@ -768,16 +1007,22 @@ refs.levelupText.innerHTML = `
 
       const heroBonus = [];
       const heroMalus = [];
-      if (hero.defending) heroBonus.push('Posture défensive active');
-      if (hero.hp <= hero.maxHp * 0.3) heroMalus.push('PV critiques');
-      if (hero.mana < CLASS_DATA[hero.className].skillCost) heroMalus.push('Mana insuffisant');
-      refs.combatPlayerBonusText.innerHTML = `${heroBonus[0] || 'Aucun bonus'}<br>${heroMalus[0] || 'Aucun malus'}`;
+      if ((hero.stunnedTurns || 0) > 0) heroMalus.push(`Étourdi ${hero.stunnedTurns} tour(s)`);
+      refs.combatPlayerBonusText.innerHTML = `${formatStatusLines(heroBonus, 'bonus')}<br>${formatStatusLines(heroMalus, 'malus')}`;
 
       const enemyBonus = [];
       const enemyMalus = [];
-      if (GAME.currentEnemy?.boss) enemyBonus.push('Boss');
+      if ((GAME.currentEnemy?.fortifyTurns || 0) > 0) enemyBonus.push(`Armure renforcée ${GAME.currentEnemy.fortifyTurns} tour(s)`);
       if ((GAME.currentEnemy?.guardBreakTurns || 0) > 0) enemyMalus.push(`Dégâts réduits ${GAME.currentEnemy.guardBreakTurns} tour(s)`);
-      refs.combatEnemyBonusText.innerHTML = `${enemyBonus[0] || 'Aucun bonus'}<br>${enemyMalus[0] || 'Aucun malus'}`;
+      if ((GAME.currentEnemy?.statDebuffTurns || 0) > 0 && GAME.currentEnemy?.statDebuff) {
+        enemyMalus.push(`-${GAME.currentEnemy.statDebuff.amount} ${GAME.currentEnemy.statDebuff.stat} (${GAME.currentEnemy.statDebuffTurns} tour(s))`);
+      }
+      refs.combatEnemyBonusText.innerHTML = `${formatStatusLines(enemyBonus, 'bonus')}<br>${formatStatusLines(enemyMalus, 'malus')}`;
+    }
+
+    function formatStatusLines(lines, type) {
+      if (!lines.length) return `Aucun ${type === 'bonus' ? 'bonus' : 'malus'}`;
+      return lines.map((line) => `<span class="status-line status-${type}">${line}</span>`).join('<br>');
     }
 
     function renderExplorationHud() {
@@ -860,7 +1105,7 @@ refs.levelupText.innerHTML = `
         document.getElementById('enemy-energy-inline').textContent = enemyMaxEnergy ? `Énergie ${Math.max(0, Math.ceil(enemyEnergy))} / ${enemyMaxEnergy}` : 'Énergie —';
         energyBar.style.width = enemyMaxEnergy ? `${Math.max(0, enemyEnergy) / enemyMaxEnergy * 100}%` : '0%';
         document.getElementById('enemy-energy-bar-explore').style.width = enemyMaxEnergy ? `${Math.max(0, enemyEnergy) / enemyMaxEnergy * 100}%` : '0%';
-        sub.textContent = enemy.description || `Niveau ennemi ${enemy.level}`;
+        sub.textContent = `${enemy.archetype} — ${enemy.skill?.name || enemy.description || `Niveau ennemi ${enemy.level}`}`;
         chip.textContent = GAME.inCombat ? 'Combat en cours' : 'Présence hostile';
       } else {
         name.textContent = 'Porte du Donjon (niv.0)';
@@ -1055,31 +1300,40 @@ refs.levelupText.innerHTML = `
 
     function startCombat() {
       const referenceLevel = Math.max(...GAME.party.map((hero) => hero.level));
-      const pool = BESTIARY.filter((e) => e.level <= referenceLevel + 1 && !e.boss);
+      const pool = BESTIARY.filter((enemy) => enemy.level <= referenceLevel + 2 && !enemy.boss);
+      const bossPool = BESTIARY.filter((enemy) => enemy.boss);
       const template = (GAME.roomsCleared > 0 && GAME.roomsCleared % 10 === 0)
-        ? BESTIARY.find((e) => e.boss)
+        ? bossPool[Math.floor(Math.random() * bossPool.length)]
         : pool[Math.floor(Math.random() * pool.length)];
 
-      GAME.currentEnemy = clone(template);
-      GAME.currentEnemy.maxHp = template.hp + GAME.roomsCleared * 3 + referenceLevel * 4;
-      GAME.currentEnemy.hp = GAME.currentEnemy.maxHp;
-      GAME.currentEnemy.dmgMin += Math.floor(GAME.roomsCleared / 4);
-      GAME.currentEnemy.dmgMax += Math.floor(GAME.roomsCleared / 3);
-      GAME.currentEnemy.description = GAME.currentEnemy.boss ? 'Le boss du palier te défie.' : `Un ennemi du donjon surgit à la salle ${GAME.roomsCleared}.`;
+      GAME.currentEnemy = primeEnemy(template, referenceLevel);
       GAME.inCombat = true;
       GAME.pendingActions = [];
       GAME.lastRoundHeroActions = {};
       GAME.lastEnemyAction = '';
       GAME.heroesChosenThisRound = 0;
-      GAME.party.forEach((hero) => hero.defending = false);
+      GAME.party.forEach((hero) => {
+        hero.defending = false;
+        hero.stunnedTurns = hero.stunnedTurns || 0;
+      });
       addLog(`Un <strong>${GAME.currentEnemy.name}</strong> bloque la route de l'équipe !`, 'loss');
-      setActiveHero(getAliveIndexes()[0] || 0, true);
+      setActiveHero(getReadyHeroIndexes()[0] || getAliveIndexes()[0] || 0, true);
     }
 
     function planAction(type) {
       if (!GAME.inCombat || GAME.isResolvingRound) return;
       const hero = getActiveHero();
       if (!hero || hero.hp <= 0) return;
+      if (type === 'skill') {
+        const cost = CLASS_DATA[hero.className].skillCost;
+        if (hero.mana < cost) {
+          showEventModal(
+            'Mana insuffisant',
+            `<strong>${hero.name}</strong> n'a pas assez d'énergie pour utiliser <strong>${CLASS_DATA[hero.className].skillName}</strong>.<br><br>Coût : ${cost} mana<br>Disponible : ${Math.max(0, Math.floor(hero.mana))} mana`
+          );
+          return;
+        }
+      }
 
       GAME.pendingActions.push({
         heroId: hero.id,
@@ -1096,7 +1350,7 @@ refs.levelupText.innerHTML = `
       addLog(`${hero.name} prépare : <strong>${actionName}</strong>.`, 'info');
       GAME.heroesChosenThisRound += 1;
 
-      const alive = getAliveIndexes();
+      const alive = getReadyHeroIndexes();
       if (GAME.heroesChosenThisRound >= alive.length) {
         resolveTeamRound();
       } else {
@@ -1121,6 +1375,7 @@ refs.levelupText.innerHTML = `
 
       GAME.pendingActions = [];
       GAME.heroesChosenThisRound = 0;
+      tickEnemyStatusesAfterHeroesPhase();
 
       if (GAME.currentEnemy && GAME.currentEnemy.hp > 0) {
         await enemyTurn();
@@ -1129,8 +1384,18 @@ refs.levelupText.innerHTML = `
       if (GAME.currentEnemy && GAME.currentEnemy.hp <= 0) {
         victory();
       } else {
-        const alive = getAliveIndexes();
-        if (alive.length) setActiveHero(alive[0], true);
+        let ready = consumeStunsForNextRound();
+        if (!ready.length && getAliveHeroes().length) {
+          addLog('Aucun héros n’est en état d’agir. L’ennemi conserve l’initiative.', 'loss');
+          await wait(250);
+          await enemyTurn();
+          if (GAME.currentEnemy && GAME.currentEnemy.hp <= 0) {
+            victory();
+          } else {
+            ready = consumeStunsForNextRound();
+          }
+        }
+        if (ready.length) setActiveHero(ready[0], true);
       }
 
       GAME.isResolvingRound = false;
@@ -1188,8 +1453,16 @@ refs.levelupText.innerHTML = `
         }
         if (hero.className === 'Gardien') {
           baseDamage = roll(derived.atk + 1, derived.atk + 6);
-          GAME.currentEnemy.guardBreakTurns = 2;
-          GAME.currentEnemy.guardBreakAmount = Math.max(2, Math.floor(hero.level / 2) + 2);
+          const drainedEnergy = Math.min(GAME.currentEnemy.mana || 0, 8 + Math.floor(hero.level / 2));
+          GAME.currentEnemy.mana = Math.max(0, (GAME.currentEnemy.mana || 0) - drainedEnergy);
+          const debuffStats = ['FOR', 'RAP', 'CON', 'MANA'];
+          const chosenStat = debuffStats[Math.floor(Math.random() * debuffStats.length)];
+          GAME.currentEnemy.statDebuffTurns = 3;
+          GAME.currentEnemy.statDebuff = {
+            stat: chosenStat,
+            amount: Math.max(2, Math.floor(hero.level / 3) + 2),
+          };
+          GAME.currentEnemy.lastHydraDrain = drainedEnergy;
           hero.defending = true;
         }
       } else if (roll(1, 100) <= derived.crit) {
@@ -1203,7 +1476,15 @@ refs.levelupText.innerHTML = `
         return;
       }
 
-      const finalDamage = Math.max(1, baseDamage - Math.floor((GAME.currentEnemy.level || 1) / 2));
+      const enemyDerived = getEnemyDerived(GAME.currentEnemy);
+      const dodgeTax = Math.floor(enemyDerived.evasion / 4);
+      if (type !== 'skill' && roll(1, 100) > Math.max(35, hitChance - dodgeTax)) {
+        GAME.lastRoundHeroActions[hero.id] = { label: actionLabelForType(hero, type), value: 'Esquivé', critical: false };
+        addLog(`${GAME.currentEnemy.name} évite l'attaque de ${hero.name} !`, 'info');
+        return;
+      }
+
+      const finalDamage = Math.max(1, baseDamage - Math.floor(enemyDerived.def / 2));
       GAME.currentEnemy.hp = Math.max(0, GAME.currentEnemy.hp - finalDamage);
 
       const actionLabel = actionLabelForType(hero, type);
@@ -1211,7 +1492,10 @@ refs.levelupText.innerHTML = `
       GAME.lastRoundHeroActions[hero.id] = { label: actionLabel, value: `${finalDamage} dégâts`, critical: critBonus };
       addLog(`${hero.name} utilise <strong>${actionLabel}</strong> et inflige <strong>${finalDamage}</strong> dégâts.${critBonus ? ' <span class="critical">CRITIQUE !</span>' : ''}`, critBonus ? 'critical' : '');
       if (type === 'skill' && hero.className === 'Gardien') {
-        addLog(`${GAME.currentEnemy.name} est ébranlé : ses dégâts sont réduits pendant <strong>2 tours</strong>.`, 'info');
+        const debuff = GAME.currentEnemy.statDebuff;
+        const manaLost = GAME.currentEnemy.lastHydraDrain || 0;
+        addLog(`${GAME.currentEnemy.name} perd <strong>${manaLost}</strong> énergie et subit <strong>-${debuff.amount} ${debuff.stat}</strong> pendant <strong>3 tours</strong>.`, 'info');
+        GAME.currentEnemy.lastHydraDrain = 0;
       }
       shakeElement(refs.enemyCard);
       renderEnemySection();
@@ -1229,32 +1513,97 @@ refs.levelupText.innerHTML = `
       await wait(250);
 
       const derived = getHeroDerived(hero);
+      const enemyDerived = getEnemyDerived(GAME.currentEnemy);
+      const skill = GAME.currentEnemy.skill;
+      const canUseSkill = skill && (GAME.currentEnemy.mana || 0) >= skill.cost;
+      const useSkill = canUseSkill && roll(1, 100) <= (GAME.currentEnemy.boss ? 48 : 34);
+
+      let label = `${GAME.currentEnemy.name} attaque`;
+      let damage = 0;
+      let critical = false;
+      let defenseFactor = 3;
+      let extraText = '';
+
+      if (useSkill) {
+        GAME.currentEnemy.mana -= skill.cost;
+        label = skill.name;
+        switch (skill.type) {
+          case 'smash':
+            damage = roll(enemyDerived.atk + 4, enemyDerived.atk + 12);
+            critical = true;
+            break;
+          case 'rush':
+            damage = roll(enemyDerived.atk + 1, enemyDerived.atk + 8);
+            defenseFactor = 4;
+            break;
+          case 'fortify':
+            damage = roll(Math.max(1, enemyDerived.atk - 1), enemyDerived.atk + 4);
+            GAME.currentEnemy.fortifyTurns = 2;
+            GAME.currentEnemy.fortifyAmount = Math.max(2, Math.floor(GAME.currentEnemy.level / 2));
+            extraText = `${GAME.currentEnemy.name} durcit sa défense pendant 2 tours.`;
+            break;
+          case 'spell':
+            damage = roll(enemyDerived.magicPower + 5, enemyDerived.magicPower + 14);
+            defenseFactor = 5;
+            break;
+          case 'venom': {
+            damage = roll(enemyDerived.atk + 2, enemyDerived.atk + 7);
+            const manaLoss = Math.min(hero.mana, 6 + Math.floor(GAME.currentEnemy.level / 3));
+            hero.mana -= manaLoss;
+            if (manaLoss > 0) extraText = `${hero.name} perd aussi ${manaLoss} énergie.`;
+            break;
+          }
+          case 'hex': {
+            damage = roll(enemyDerived.magicPower + 3, enemyDerived.magicPower + 10);
+            defenseFactor = 5;
+            hero.defending = false;
+            const drained = Math.min(hero.mana, 8);
+            hero.mana -= drained;
+            if (drained > 0) extraText = `${hero.name} se fait siphonner ${drained} énergie.`;
+            break;
+          }
+          case 'heal': {
+            const heal = roll(enemyDerived.magicPower + 6, enemyDerived.magicPower + 14);
+            GAME.currentEnemy.hp = Math.min(GAME.currentEnemy.maxHp, GAME.currentEnemy.hp + heal);
+            GAME.lastEnemyAction = { label, value: `+${heal} PV`, critical: false };
+            addLog(`${GAME.currentEnemy.name} se régénère de <strong>${heal}</strong> PV.`, 'gain');
+            renderGame();
+            await wait(320);
+            return;
+          }
+          case 'stun':
+            damage = roll(enemyDerived.atk + 3, enemyDerived.atk + 9);
+            hero.stunnedTurns = Math.max(hero.stunnedTurns || 0, 1);
+            extraText = `${hero.name} sera étourdi au prochain tour du groupe.`;
+            break;
+          default:
+            damage = roll(enemyDerived.dmgMin, enemyDerived.dmgMax);
+            break;
+        }
+      } else {
+        damage = roll(enemyDerived.dmgMin, enemyDerived.dmgMax);
+      }
+
       if (roll(1, 100) <= derived.evasion) {
-        GAME.lastEnemyAction = { label: `${GAME.currentEnemy.name} attaque`, value: 'Esquivée', critical: false };
+        GAME.lastEnemyAction = { label, value: 'Esquivée', critical: false };
         addLog(`${hero.name} esquive l’attaque de ${GAME.currentEnemy.name} !`, 'info');
         return;
       }
 
-      let damage = roll(GAME.currentEnemy.dmgMin, GAME.currentEnemy.dmgMax);
-      if (GAME.currentEnemy.guardBreakTurns > 0) {
-        damage = Math.max(1, damage - (GAME.currentEnemy.guardBreakAmount || 0));
-      }
-      damage = Math.max(1, damage - Math.floor(derived.def / 3));
+      if (GAME.currentEnemy.guardBreakTurns > 0) damage = Math.max(1, damage - (GAME.currentEnemy.guardBreakAmount || 0));
+      damage = Math.max(1, damage - Math.floor(derived.def / defenseFactor));
       if (hero.defending) {
         damage = Math.max(1, Math.floor(damage * 0.45));
         addLog(`${hero.name} encaisse une partie du choc grâce à sa défense.`, 'info');
         hero.defending = false;
       }
-      if (GAME.currentEnemy.guardBreakTurns > 0) {
-        GAME.currentEnemy.guardBreakTurns -= 1;
-        if (GAME.currentEnemy.guardBreakTurns <= 0) {
-          GAME.currentEnemy.guardBreakAmount = 0;
-        }
-      }
+      tickEnemyStatusesAfterEnemyTurn();
 
       hero.hp = Math.max(0, hero.hp - damage);
-      GAME.lastEnemyAction = { label: `${GAME.currentEnemy.name} → ${hero.name}`, value: `${damage} dégâts`, critical: false };
-      addLog(`${GAME.currentEnemy.name} inflige <strong>${damage}</strong> dégâts à <strong>${hero.name}</strong> !`, 'loss');
+      GAME.currentEnemy.mana = Math.min(GAME.currentEnemy.maxMana, (GAME.currentEnemy.mana || 0) + 3);
+      GAME.lastEnemyAction = { label, value: `${damage} dégâts`, critical };
+      addLog(`${GAME.currentEnemy.name} inflige <strong>${damage}</strong> dégâts à <strong>${hero.name}</strong> !`, critical ? 'critical' : 'loss');
+      if (extraText) addLog(extraText, 'info');
       shakeElement(refs.playerCard);
       renderGame();
 
@@ -1411,19 +1760,20 @@ refs.levelupText.innerHTML = `
     function rollLoot(enemy, returnOnly = false) {
       const rolls = Math.max(1, Math.ceil(GAME.party.length / 2));
       const drops = [];
+      const itemLevel = getGroupLootLevel(enemy);
       for (let i = 0; i < rolls; i++) {
         const r = roll(1, 100);
         if (r <= 38) {
-          drops.push({ name: 'Potion de soin', type: 'consumable', stackable: true, quantity: 1, heal: 35 + Math.max(1, GAME.party[0]?.level || 1) * 3, effectText: 'Restaure des PV', icon: '🧪' });
+          drops.push(createScaledConsumable('heal', itemLevel, 1));
         } else if (r <= 60) {
-          drops.push({ name: 'Potion de mana', type: 'consumable', stackable: true, quantity: 1, manaRestore: 30, effectText: 'Restaure 30 mana', icon: '🔵' });
+          drops.push(createScaledConsumable('mana', itemLevel, 1));
         } else if (r <= 80) {
-          drops.push(clone(WEAPONS[Math.floor(Math.random() * WEAPONS.length)]));
+          drops.push(scaleGearItem(WEAPONS[Math.floor(Math.random() * WEAPONS.length)], itemLevel));
         } else {
-          drops.push(clone(ARMORS[Math.floor(Math.random() * ARMORS.length)]));
+          drops.push(scaleGearItem(ARMORS[Math.floor(Math.random() * ARMORS.length)], itemLevel));
         }
       }
-      if (enemy.boss) drops.push(clone(WEAPONS[Math.min(WEAPONS.length - 1, 4)]));
+      if (enemy.boss) drops.push(scaleGearItem(WEAPONS[Math.min(WEAPONS.length - 1, 8)], itemLevel + 1));
       if (returnOnly) return drops;
       applyLootDrops(drops);
       addLog(`<strong>Butin récupéré :</strong><br>${drops.map((item) => `${item.icon || '📦'} ${item.name}`).join('<br>')}`, 'loot');
@@ -1481,16 +1831,17 @@ refs.levelupText.innerHTML = `
     function findTreasure() {
       const bonusRoll = roll(1, 100);
       const drops = [];
+      const itemLevel = getGroupLootLevel();
       if (bonusRoll <= 50) {
-        drops.push({ name: 'Potion de soin', type: 'consumable', stackable: true, quantity: 2, heal: 35, effectText: 'Restaure 35 PV', icon: '🧪' });
+        drops.push(createScaledConsumable('heal', itemLevel, 2));
       } else if (bonusRoll <= 70) {
-        drops.push({ name: 'Potion de mana', type: 'consumable', stackable: true, quantity: 2, manaRestore: 30, effectText: 'Restaure 30 mana', icon: '🔵' });
+        drops.push(createScaledConsumable('mana', itemLevel, 2));
       } else if (bonusRoll <= 85) {
-        const item = clone(WEAPONS[Math.floor(Math.random() * WEAPONS.length)]);
+        const item = scaleGearItem(WEAPONS[Math.floor(Math.random() * WEAPONS.length)], itemLevel);
         item.id = uid();
         drops.push(item);
       } else {
-        const item = clone(ARMORS[Math.floor(Math.random() * ARMORS.length)]);
+        const item = scaleGearItem(ARMORS[Math.floor(Math.random() * ARMORS.length)], itemLevel);
         item.id = uid();
         drops.push(item);
       }
@@ -1723,9 +2074,9 @@ refs.levelupText.innerHTML = `
       GAME.isLevelingUp = false;
       GAME.pendingModalAction = null;
       GAME.party.forEach((hero) => syncHeroCaps(hero, false));
+      GAME.party.forEach((hero) => { hero.stunnedTurns = hero.stunnedTurns || 0; });
       if (GAME.currentEnemy) {
-        GAME.currentEnemy.guardBreakTurns = GAME.currentEnemy.guardBreakTurns || 0;
-        GAME.currentEnemy.guardBreakAmount = GAME.currentEnemy.guardBreakAmount || 0;
+        GAME.currentEnemy = upgradeEnemyState(GAME.currentEnemy);
       }
     }
 
