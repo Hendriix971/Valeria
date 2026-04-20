@@ -9,86 +9,172 @@
 <body>
   <div id="game-wrapper">
     <div class="header">
-      <h1>VALERIA — FAUX MULTI</h1>
-      <div class="subtitle">Nouvelle base d’équipe, inspirée du solo pour l’UI et de Manus pour les idées mécaniques.</div>
+      <h1>VALERIA &mdash; FAUX MULTI</h1>
+      <div class="subtitle">Nouvelle base d&rsquo;&eacute;quipe, inspir&eacute;e du solo pour l&rsquo;UI et de Manus pour les id&eacute;es m&eacute;caniques.</div>
     </div>
 
-    <div id="setup-screen" class="setup-screen">
+    <div id="menu-screen" class="setup-screen">
+      <div class="menu-layout">
+        <div class="setup-card">
+          <h2>Sauvegardes</h2>
+          <div id="save-list" class="party-builder"></div>
+        </div>
+        <div class="setup-card menu-actions-card">
+          <h2>Actions</h2>
+          <div class="menu-actions">
+            <button id="continue-btn" class="class-btn">Reprendre</button>
+            <button id="open-setup-btn" class="class-btn">Cr&eacute;er &eacute;quipe</button>
+            <button id="clear-save-btn" class="class-btn">Effacer</button>
+          </div>
+          <div id="save-status" class="save-status">Aucune sauvegarde active.</div>
+        </div>
+      </div>
+    </div>
+
+    <div id="setup-screen" class="setup-screen hidden">
       <div class="setup-card">
-        <h2>Préparer l'équipe</h2>
+        <h2>Pr&eacute;parer l'&eacute;quipe</h2>
         <div id="party-builder" class="party-builder"></div>
         <div class="setup-actions">
           <button id="add-hero-btn" class="class-btn">[ + ] Ajouter un personnage</button>
           <button id="play-btn" class="class-btn">Jouer</button>
         </div>
+        <div class="setup-actions secondary-actions">
+          <button id="back-to-menu-btn" class="class-btn">Retour</button>
+          <button id="reset-team-btn" class="class-btn">Vider l'&eacute;quipe</button>
+        </div>
       </div>
     </div>
 
     <div id="game-screen" class="game-screen hidden">
-      <div class="side-panel">
-        <h2>Équipe</h2>
+      <div class="side-panel team-panel">
+        <h2>&Eacute;quipe</h2>
         <div id="team-scroll" class="team-scroll"></div>
       </div>
 
-      <div class="main-center">
-        <div class="battlefield">
-          <div id="player-card" class="visual-card">
-            <div id="player-battle-emoji" class="sprite">⚔️</div>
-            <h3 id="player-battle-name">Aventurier</h3>
-            <div id="player-battle-sub" class="subtext">Prêt à entrer dans le donjon</div>
-            <div class="bar-wrap">
-              <div class="bar-label"><span>PV</span><span id="player-card-hp">60 / 60</span></div>
-              <div class="health-bar-container"><div id="player-card-hp-bar" class="health-bar"></div></div>
-              <div class="bar-label"><span>Mana</span><span id="player-card-mana">20 / 20</span></div>
-              <div class="mana-bar-container"><div id="player-card-mana-bar" class="mana-bar"></div></div>
+      <div class="content-shell">
+        <div id="exploration-sidebar" class="panel character-sheet"></div>
+
+        <div class="main-center">
+          <div class="battlefield-shell">
+            <div class="battlefield">
+              <div class="combat-side combat-left">
+                <div id="combat-player-stats" class="combat-stat-panel"></div>
+                <div id="combat-player-bonus" class="combat-bonus-panel">
+                  <div class="combat-panel-title">Bonus / Malus</div>
+                  <div id="combat-player-bonus-text">Aucun bonus<br>Aucun malus</div>
+                </div>
+              </div>
+              <div id="player-card" class="visual-card">
+                <h3 id="player-battle-name">Aventurier (niv.1)</h3>
+                <div id="player-battle-sub" class="subtext">Pr&ecirc;t &agrave; entrer dans le donjon</div>
+                <div class="combat-inline-bars" id="player-inline-bars">
+                  <div class="health-bar-container compact-bar">
+                    <div id="player-card-hp-bar" class="health-bar"></div>
+                    <span id="player-card-hp-inline" class="bar-inline-text">PV 60 / 60</span>
+                  </div>
+                  <div class="mana-bar-container compact-bar">
+                    <div id="player-card-mana-bar" class="mana-bar"></div>
+                    <span id="player-card-mana-inline" class="bar-inline-text">Énergie 20 / 20</span>
+                  </div>
+                </div>
+                <div class="combat-card-separator"></div>
+                <div id="player-battle-emoji" class="sprite battle-emoji">&#9876;&#65039;</div>
+                <div class="bar-wrap exploration-bar-wrap">
+                  <div class="bar-label"><span>PV</span><span id="player-card-hp">60 / 60</span></div>
+                  <div class="health-bar-container"><div id="player-card-hp-bar-explore" class="health-bar"></div></div>
+                  <div class="bar-label"><span>Mana</span><span id="player-card-mana">20 / 20</span></div>
+                  <div class="mana-bar-container"><div id="player-card-mana-bar-explore" class="mana-bar"></div></div>
+                </div>
+                <div class="status-chip" id="player-status-chip">En attente</div>
+              </div>
+
+              <div id="enemy-card" class="visual-card">
+                <h3 id="enemy-name">Porte du Donjon (niv.0)</h3>
+                <div id="enemy-sub" class="subtext">Une aventure t'attend</div>
+                <div class="combat-inline-bars" id="enemy-inline-bars">
+                  <div class="health-bar-container compact-bar">
+                    <div id="enemy-hp-bar" class="health-bar"></div>
+                    <span id="enemy-hp-inline" class="bar-inline-text">PV &mdash;</span>
+                  </div>
+                  <div class="mana-bar-container compact-bar">
+                    <div id="enemy-energy-bar" class="mana-bar"></div>
+                    <span id="enemy-energy-inline" class="bar-inline-text">&Eacute;nergie &mdash;</span>
+                  </div>
+                </div>
+                <div class="combat-card-separator"></div>
+                <div id="enemy-sprite" class="sprite battle-emoji">&#127984;</div>
+                <div class="bar-wrap exploration-bar-wrap">
+                  <div class="bar-label"><span>PV</span><span id="enemy-hp-text">&mdash;</span></div>
+                  <div class="health-bar-container"><div id="enemy-hp-bar-explore" class="health-bar"></div></div>
+                  <div class="bar-label"><span>&Eacute;nergie</span><span id="enemy-energy-text">&mdash;</span></div>
+                  <div class="mana-bar-container"><div id="enemy-energy-bar-explore" class="mana-bar"></div></div>
+                </div>
+                <div class="status-chip" id="enemy-status-chip">Exploration</div>
+              </div>
+              <div class="combat-side combat-right">
+                <div id="combat-enemy-stats" class="combat-stat-panel"></div>
+                <div id="combat-enemy-bonus" class="combat-bonus-panel">
+                  <div class="combat-panel-title">Bonus / Malus</div>
+                  <div id="combat-enemy-bonus-text">Aucun bonus<br>Aucun malus</div>
+                </div>
+              </div>
             </div>
-            <div class="status-chip" id="player-status-chip">En attente</div>
           </div>
 
-          <div id="enemy-card" class="visual-card">
-            <div id="enemy-sprite" class="sprite">🏰</div>
-            <h3 id="enemy-name">Porte du Donjon</h3>
-            <div id="enemy-sub" class="subtext">Une aventure t'attend</div>
-            <div class="bar-wrap">
-              <div class="bar-label"><span>PV</span><span id="enemy-hp-text">—</span></div>
-              <div class="health-bar-container"><div id="enemy-hp-bar" class="health-bar"></div></div>
+          <div id="exploration-hud" class="combat-actions-panel panel hidden">
+            <div class="combat-panel-column">
+              <div class="combat-panel-title">H&eacute;ros affich&eacute;</div>
+              <div id="exploration-hero-summary" class="combat-panel-text">Aucun h&eacute;ros s&eacute;lectionn&eacute;.</div>
             </div>
-            <div class="status-chip" id="enemy-status-chip">Exploration</div>
+            <div class="combat-panel-column">
+              <div class="combat-panel-title">Exp&eacute;dition</div>
+              <div id="exploration-world-summary" class="combat-panel-text">La compagnie se pr&eacute;pare &agrave; entrer dans le donjon.</div>
+            </div>
+          </div>
+
+          <div id="exploration-controls" class="controls">
+            <button class="action-btn" id="btn-explore">Avancer dans le donjon<small>D&eacute;clenche combat, coffre ou pi&egrave;ge</small></button>
+            <button class="action-btn" id="btn-rest">Se reposer<small>Attends 10 sec pour restaurer toute l&rsquo;&eacute;quipe</small></button>
+          </div>
+
+          <div id="combat-controls" class="controls hidden">
+            <button class="action-btn" id="btn-attack">Attaque normale<small>Planifier pour ce h&eacute;ros</small></button>
+            <button class="action-btn" id="btn-heavy">Attaque puissante<small>Plus forte mais moins pr&eacute;cise</small></button>
+            <button class="action-btn" id="btn-block">Encaisser<small>R&eacute;duit la prochaine attaque</small></button>
+            <button class="action-btn" id="btn-skill">Comp&eacute;tence de classe<small id="skill-label">Comp&eacute;tence</small></button>
+          </div>
+
+          <div id="combat-actions" class="combat-actions-panel panel hidden">
+            <div class="combat-panel-column">
+              <div id="combat-plan-title" class="combat-panel-title">Plan du tour</div>
+              <div id="combat-plan" class="combat-panel-text combat-last-action">Aucune action planifi&eacute;e.</div>
+            </div>
+            <div class="combat-panel-column">
+              <div id="combat-last-title" class="combat-panel-title">Dernier &eacute;change</div>
+              <div id="combat-last-action" class="combat-panel-text combat-last-action">Le combat n'a pas commenc&eacute;.</div>
+            </div>
           </div>
         </div>
 
-        <div id="log" class="log-area panel"></div>
+        <div class="side-panel detail-panel">
+          <h2>&Eacute;quipement et Sac</h2>
 
-        <div id="exploration-controls" class="controls">
-          <button class="action-btn" id="btn-explore">Avancer dans le donjon<small>Déclenche combat, coffre ou piège</small></button>
-          <button class="action-btn" id="btn-rest">Se reposer<small>Attends 10 sec pour restaurer toute l’équipe</small></button>
-        </div>
+          <div class="inventory-section-title">&Eacute;quipement du h&eacute;ros affich&eacute;</div>
+          <div id="equipment-list" class="inventory-list"></div>
+          <div class="inventory-actions">
+            <button class="small-btn" id="btn-use-equipped" disabled>Utiliser</button>
+            <button class="small-btn" id="btn-equip-equipped" disabled>&Eacute;quiper</button>
+            <button class="small-btn" id="btn-drop-equipped">Jeter</button>
+          </div>
 
-        <div id="combat-controls" class="controls hidden">
-          <button class="action-btn" id="btn-attack">Attaque normale<small>Planifier pour ce héros</small></button>
-          <button class="action-btn" id="btn-heavy">Attaque puissante<small>Plus forte mais moins précise</small></button>
-          <button class="action-btn" id="btn-block">Encaisser<small>Réduit la prochaine attaque</small></button>
-          <button class="action-btn" id="btn-skill">Compétence de classe<small id="skill-label">Compétence</small></button>
-        </div>
-      </div>
-
-      <div class="side-panel">
-        <h2>Équipement et Sac</h2>
-
-        <div class="inventory-section-title">Équipement du héros affiché</div>
-        <div id="equipment-list" class="inventory-list"></div>
-        <div class="inventory-actions">
-          <button class="small-btn" id="btn-use-equipped" disabled>Utiliser</button>
-          <button class="small-btn" id="btn-equip-equipped" disabled>Équiper</button>
-          <button class="small-btn" id="btn-drop-equipped">Jeter</button>
-        </div>
-
-        <div class="inventory-section-title">Sac partagé</div>
-        <div id="inventory-list" class="inventory-list"></div>
-        <div class="inventory-actions">
-          <button class="small-btn" id="btn-use-item">Utiliser</button>
-          <button class="small-btn" id="btn-equip-item">Équiper</button>
-          <button class="small-btn" id="btn-drop-item">Jeter</button>
+          <div class="inventory-section-title">Sac partag&eacute;</div>
+          <div id="inventory-list" class="inventory-list"></div>
+          <div class="inventory-actions">
+            <button class="small-btn" id="btn-use-item">Utiliser</button>
+            <button class="small-btn" id="btn-equip-item">&Eacute;quiper</button>
+            <button class="small-btn" id="btn-drop-item">Jeter</button>
+          </div>
         </div>
       </div>
     </div>
@@ -97,7 +183,7 @@
 
     <div id="creation-modal" class="modal">
       <div class="modal-card">
-        <h2>Créer un personnage</h2>
+        <h2>Cr&eacute;er un personnage</h2>
         <div class="creation-grid">
           <div>
             <label class="field-label" for="hero-name">Pseudo</label>
@@ -107,7 +193,7 @@
             <div class="class-grid" id="class-grid"></div>
 
             <div class="points-box">
-              <span>Points à répartir</span>
+              <span>Points &agrave; r&eacute;partir</span>
               <strong id="creation-points">10</strong>
             </div>
 
@@ -121,10 +207,10 @@
 
           <div>
             <div class="panel">
-              <h2>Aperçu</h2>
+              <h2>Aper&ccedil;u</h2>
               <div class="party-slot" style="margin-bottom:12px;">
                 <div class="slot-left">
-                  <div id="preview-emoji" class="party-emoji">⚔️</div>
+                  <div id="preview-emoji" class="party-emoji">&#9876;&#65039;</div>
                   <div class="slot-info">
                     <div id="preview-name" class="slot-name">Aventurier</div>
                     <div id="preview-class" class="slot-meta">Guerrier</div>
@@ -144,19 +230,27 @@
       </div>
     </div>
 
-
     <div id="levelup-modal" class="modal">
       <div class="modal-card">
-        <h2>Montée de niveau</h2>
-        <p id="levelup-text">Choisis 2 améliorations.</p>
+        <h2>Mont&eacute;e de niveau</h2>
+        <p id="levelup-text">Choisis 2 am&eacute;liorations.</p>
         <div id="levelup-choices" class="class-grid"></div>
       </div>
     </div>
 
     <div id="rest-modal" class="modal">
       <div class="modal-card">
-        <h2>🛌</h2>
+        <h2>&#128716;</h2>
         <p id="rest-text">Vous vous reposez.<br>Temps d'attente : <strong>0:10</strong></p>
+      </div>
+    </div>
+    <div id="event-modal" class="modal">
+      <div class="modal-card">
+        <h2 id="event-title">&Eacute;v&eacute;nement</h2>
+        <p id="event-text">Quelque chose se produit.</p>
+        <div class="setup-actions modal-actions">
+          <button id="event-confirm-btn" class="class-btn">Continuer</button>
+        </div>
       </div>
     </div>
     <div id="turn-popup" class="turn-popup hidden"></div>
