@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Valeria V4</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div id="app" class="app-shell">
+    <header class="app-header">
+      <h1>VALERIA V4</h1>
+      <p>Mode Survie</p>
+    </header>
+
+    <main class="screen-stack">
+      <section id="screen-save-list" class="screen panel">
+        <div class="screen-head">
+          <div>
+            <h2>Parties sauvegardées</h2>
+            <p>Choisis une sauvegarde existante ou crée une nouvelle aventure.</p>
+          </div>
+        </div>
+        <div class="save-layout">
+          <div id="save-list" class="save-list"></div>
+          <div class="save-actions">
+            <button id="btn-new-game" class="btn primary">Nouvelle partie</button>
+            <button id="btn-load-game" class="btn" disabled>Charger</button>
+            <button id="btn-delete-save" class="btn danger" disabled>Supprimer</button>
+          </div>
+        </div>
+      </section>
+
+      <section id="screen-create-team" class="screen panel hidden">
+        <div class="screen-head">
+          <div>
+            <h2>Création d'équipe</h2>
+            <p>Compose une équipe de quatre héros maximum pour commencer une nouvelle partie.</p>
+          </div>
+          <button id="btn-back-to-saves" class="btn ghost">Retour</button>
+        </div>
+        <div class="create-layout">
+          <div class="panel create-form-panel">
+            <h3>Nouveau personnage</h3>
+            <label class="field">
+              <span>Nom</span>
+              <input id="create-name" type="text" maxlength="18" placeholder="Nom du héros">
+            </label>
+            <label class="field">
+              <span>Classe</span>
+              <select id="create-class"></select>
+            </label>
+            <div id="create-class-info" class="info-card"></div>
+            <div class="field">
+              <span>Points à répartir</span>
+              <div id="create-points" class="points-pill">6</div>
+            </div>
+            <p class="stat-help">Les bonus de classe sont déjà inclus dans les stats affichées et ne peuvent pas être retirés.</p>
+            <div id="create-stats" class="stat-grid"></div>
+            <button id="btn-add-member" class="btn primary">Ajouter à l'équipe</button>
+          </div>
+
+          <div class="panel team-builder-panel">
+            <h3>équipe en prparation</h3>
+            <div id="draft-team-list" class="draft-team-list"></div>
+            <div class="team-builder-footer">
+              <button id="btn-start-run" class="btn primary" disabled>Commencer la partie</button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="screen-main-menu" class="screen panel hidden">
+        <div class="screen-head">
+          <div>
+            <h2>Menu principal</h2>
+            <p id="menu-save-name">Aventure</p>
+          </div>
+          <div class="menu-top-actions">
+            <button id="btn-open-inventory" class="btn">Inventaire</button>
+            <button id="btn-save-and-exit" class="btn ghost">Retour aux sauvegardes</button>
+          </div>
+        </div>
+
+        <div class="menu-layout">
+          <aside class="panel party-panel">
+            <div class="panel-title">équipe</div>
+            <div id="menu-team-list" class="menu-team-list"></div>
+          </aside>
+
+          <section class="panel map-panel">
+            <div class="panel-title-row">
+              <div class="panel-title">Carte</div>
+              <div id="menu-gold" class="gold-pill">0 Or</div>
+            </div>
+            <div class="world-map">
+              <button id="poi-merchant" class="poi-button poi-merchant" type="button">Marchand</button>
+              <button id="poi-tavern" class="poi-button poi-tavern" type="button">Taverne</button>
+              <button id="poi-forest" class="poi-button poi-forest" type="button">Forêt</button>
+              <button id="poi-dungeon" class="poi-button poi-dungeon" type="button">Donjon</button>
+            </div>
+            <div id="map-message" class="map-message">Choisis une destination sur la carte.</div>
+          </section>
+        </div>
+      </section>
+
+      <section id="screen-forest-exploration" class="screen panel hidden">
+        <div class="screen-head">
+          <div>
+            <h2>Forêt</h2>
+            <p>Exploration</p>
+          </div>
+          <div class="menu-top-actions">
+            <button id="btn-forest-open-inventory" class="btn">Inventaire</button>
+            <button id="btn-forest-save-and-exit" class="btn ghost">Retour aux sauvegardes</button>
+          </div>
+        </div>
+        <div class="exploration-layout">
+          <aside class="panel party-panel">
+            <div class="panel-title">équipe</div>
+            <div id="forest-team-list" class="menu-team-list"></div>
+          </aside>
+          <section class="panel exploration-panel">
+            <div class="exploration-scene forest-scene">
+              <div class="scene-overlay">
+                <div class="scene-title">Lisière de la forêt</div>
+                <div id="forest-step-counter" class="scene-subtitle">Pas encore de progression</div>
+              </div>
+            </div>
+            <div class="exploration-actions">
+              <button id="btn-forest-advance" class="btn primary">Avancer</button>
+              <button id="btn-forest-exit" class="btn ghost">Sortir de la forêt</button>
+            </div>
+            <div id="forest-log" class="message-box">La forêt bruisse autour de votre équipe.</div>
+          </section>
+        </div>
+      </section>
+
+      <section id="screen-forest-combat" class="screen panel hidden">
+        <div class="screen-head">
+          <div>
+            <h2>Combat en forêt</h2>
+            <p id="forest-combat-turn">Tour 1</p>
+          </div>
+        </div>
+        <div id="forest-combat-root"></div>
+      </section>
+
+      <section id="screen-dungeon-select" class="screen panel hidden">
+        <div class="screen-head">
+          <div>
+            <h2>Sélection du donjon</h2>
+            <p>Choisis une tour à explorer. Seule la Tour de la Colère est disponible au départ.</p>
+          </div>
+          <button id="btn-dungeon-select-back" class="btn ghost">Retour</button>
+        </div>
+        <div class="panel dungeon-list-panel">
+          <div id="dungeon-list" class="dungeon-list"></div>
+        </div>
+      </section>
+
+      <section id="screen-dungeon-exploration" class="screen panel hidden">
+        <div class="screen-head">
+          <div>
+            <h2 id="dungeon-title">Donjon</h2>
+            <p id="dungeon-floor-label">étage 1 / 10</p>
+          </div>
+        </div>
+        <div class="exploration-layout">
+          <aside class="panel party-panel">
+            <div class="panel-title">équipe</div>
+            <div id="dungeon-team-list" class="menu-team-list"></div>
+          </aside>
+          <section class="panel exploration-panel">
+            <div class="exploration-scene dungeon-scene">
+              <div class="scene-overlay">
+                <div id="dungeon-scene-title" class="scene-title">Tour de la Colère</div>
+                <div id="dungeon-scene-subtitle" class="scene-subtitle">Le prochain étage peut contenir un piège, un coffre ou un combat.</div>
+              </div>
+            </div>
+            <div class="exploration-actions">
+              <button id="btn-dungeon-advance" class="btn primary">Avancer</button>
+              <button id="btn-dungeon-flee" class="btn ghost">Fuir le donjon</button>
+            </div>
+            <div id="dungeon-log" class="message-box">Le silence du donjon pèse sur le groupe.</div>
+          </section>
+        </div>
+      </section>
+
+      <section id="screen-dungeon-combat" class="screen panel hidden">
+        <div class="screen-head">
+          <div>
+            <h2 id="dungeon-combat-title">Combat du donjon</h2>
+            <p id="dungeon-combat-turn">Tour 1</p>
+          </div>
+        </div>
+        <div id="dungeon-combat-root"></div>
+      </section>
+    </main>
+  </div>
+
+  <div id="modal-overlay" class="modal-overlay hidden">
+    <div class="modal-card">
+      <button id="modal-close" class="modal-close" type="button">×</button>
+      <div id="modal-title" class="modal-title">Titre</div>
+      <div id="modal-body" class="modal-body"></div>
+      <div id="modal-actions" class="modal-actions"></div>
+    </div>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
