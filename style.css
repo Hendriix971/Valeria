@@ -2347,6 +2347,40 @@ body.combat-view-active .app-header p {
   }
 }
 
+#screen-main-menu .menu-layout {
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.25fr) 92px;
+  grid-template-areas: "hero map party";
+}
+
+#screen-main-menu .menu-hero-detail {
+  grid-area: hero;
+}
+
+#screen-main-menu .map-panel {
+  grid-area: map;
+}
+
+#screen-main-menu .party-panel {
+  grid-area: party;
+}
+
+#screen-forest-exploration .exploration-layout {
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.25fr) 92px;
+  grid-template-areas: "hero forest party";
+}
+
+#screen-forest-exploration .exploration-hero-detail {
+  grid-area: hero;
+}
+
+#screen-forest-exploration .exploration-panel {
+  grid-area: forest;
+}
+
+#screen-forest-exploration .party-panel {
+  grid-area: party;
+}
+
 .hero-portrait-img {
   display: block;
   max-width: 92%;
