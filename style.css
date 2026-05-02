@@ -2223,22 +2223,22 @@ body.combat-view-active .app-header p {
 
 #screen-main-menu .menu-layout {
   grid-template-columns: minmax(0, 1fr) minmax(0, 1.25fr) 92px;
+  grid-template-areas: "hero map party";
   align-items: stretch;
   width: 92%;
   margin: 0 auto;
 }
 
 #screen-main-menu .party-panel {
-  grid-column: 3;
+  grid-area: party;
 }
 
 #screen-main-menu .map-panel {
-  grid-column: 2;
+  grid-area: map;
 }
 
 #screen-main-menu .menu-hero-detail {
-  grid-column: 1;
-  grid-row: 1;
+  grid-area: hero;
   width: 100%;
   min-height: 100%;
 }
@@ -2265,17 +2265,18 @@ body.combat-view-active .app-header p {
 
 #screen-forest-exploration .exploration-layout {
   grid-template-columns: minmax(0, 1fr) minmax(0, 1.25fr) 92px;
+  grid-template-areas: "hero forest party";
   align-items: stretch;
   width: 92%;
   margin: 0 auto;
 }
 
 #screen-forest-exploration .party-panel {
-  grid-column: 3;
+  grid-area: party;
 }
 
 #screen-forest-exploration .exploration-panel {
-  grid-column: 2;
+  grid-area: forest;
   padding: 12px;
   border: 1px solid var(--line);
   border-radius: var(--radius);
@@ -2307,8 +2308,7 @@ body.combat-view-active .app-header p {
 }
 
 #screen-forest-exploration .exploration-hero-detail {
-  grid-column: 1;
-  grid-row: 1;
+  grid-area: hero;
   width: 100%;
   min-height: 100%;
 }
@@ -2316,6 +2316,7 @@ body.combat-view-active .app-header p {
 @media (max-width: 960px) {
   #screen-main-menu .menu-layout {
     grid-template-columns: 1fr;
+    grid-template-areas: none;
   }
 
   #screen-main-menu .menu-hero-detail {
@@ -2324,6 +2325,7 @@ body.combat-view-active .app-header p {
 
   #screen-forest-exploration .exploration-layout {
     grid-template-columns: 1fr;
+    grid-template-areas: none;
     width: 100%;
   }
 
