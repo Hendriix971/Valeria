@@ -2414,3 +2414,203 @@ body.combat-view-active .app-header p {
   align-self: flex-end;
   margin: auto auto 0;
 }
+
+/* Fixed 16:9 game-window mode. This block intentionally overrides responsive layout rules. */
+html,
+body {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+}
+
+body,
+body.combat-view-active {
+  margin: 0;
+  min-height: 100vh;
+  padding: 0;
+  display: block;
+  overflow: hidden;
+  background:
+    radial-gradient(circle at top, rgba(77, 166, 255, 0.08), transparent 34%),
+    linear-gradient(180deg, #242730, #1e1e1e);
+}
+
+.game-viewport {
+  width: 100vw;
+  height: 100vh;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+}
+
+.app-shell,
+body.combat-view-active .app-shell {
+  width: 1600px;
+  height: 900px;
+  aspect-ratio: 16 / 9;
+  transform-origin: center center;
+  margin: 0;
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  background: rgba(47, 53, 64, 0.96);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+}
+
+.app-header,
+body.combat-view-active .app-header {
+  flex: 0 0 auto;
+  text-align: center;
+  border-bottom: 1px solid var(--line);
+  padding: 6px 0 12px;
+  margin-bottom: 12px;
+}
+
+.app-header h1,
+body.combat-view-active .app-header h1 {
+  margin: 0;
+  color: var(--gold);
+  font-size: 3rem;
+  letter-spacing: 1px;
+  text-shadow: none;
+}
+
+.app-header p,
+body.combat-view-active .app-header p {
+  margin: 6px 0 0;
+  color: var(--muted);
+  font-size: 0.96rem;
+}
+
+.screen-stack {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: grid;
+}
+
+.screen {
+  height: 100%;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.menu-layout,
+.exploration-layout,
+.combat-layout,
+.combat-arena,
+.v3-combat-screen.game-screen,
+.v3-combat-screen .battlefield,
+.v3-combat-screen .combat-actions-panel {
+  align-self: stretch;
+}
+
+#screen-main-menu .menu-layout {
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.25fr) 92px;
+  grid-template-areas: "hero map party";
+}
+
+#screen-main-menu .menu-hero-detail { grid-area: hero; }
+#screen-main-menu .map-panel { grid-area: map; }
+#screen-main-menu .party-panel { grid-area: party; }
+
+#screen-forest-exploration .exploration-layout {
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.25fr) 92px;
+  grid-template-areas: "hero forest party";
+}
+
+#screen-forest-exploration .exploration-hero-detail { grid-area: hero; }
+#screen-forest-exploration .exploration-panel { grid-area: forest; }
+#screen-forest-exploration .party-panel { grid-area: party; }
+
+.v3-combat-screen.game-screen {
+  grid-template-columns: 180px minmax(0, 1fr);
+}
+
+.v3-combat-screen .battlefield {
+  grid-template-columns: 135px minmax(0, 1fr) minmax(0, 1fr) 135px;
+}
+
+.v3-combat-screen .combat-actions-panel {
+  grid-template-columns: 1fr 1fr;
+}
+
+.v3-combat-screen .combat-side {
+  order: initial;
+}
+
+.v3-combat-screen .bakoro-drawer {
+  position: absolute;
+  left: 155px;
+  top: calc(100% + 8px);
+  width: 420px;
+  max-height: 240px;
+  margin-top: 0;
+}
+
+.exploration-detail-portrait {
+  font-size: 6rem;
+}
+
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+}
+
+.modal-card {
+  width: 760px;
+  max-height: 852px;
+}
+
+.modal-overlay.modal-compact .modal-card {
+  width: 440px;
+}
+
+.modal-overlay.modal-delay .modal-card {
+  width: 260px;
+}
+
+/* Fixed-window layout overrides for legacy responsive rules. */
+.save-layout {
+  grid-template-columns: minmax(0, 1fr) 260px;
+}
+
+.create-layout {
+  grid-template-columns: 380px minmax(0, 1fr);
+}
+
+.combat-layout {
+  grid-template-columns: 280px minmax(0, 1fr);
+}
+
+.combat-arena {
+  grid-template-columns: 1fr 1fr;
+}
+
+.screen-head {
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: flex-start;
+}
+
+.panel-title-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.menu-top-actions,
+.exploration-actions,
+.modal-actions {
+  flex-direction: row;
+}
+
+.merchant-toolbar {
+  grid-template-columns: repeat(3, 1fr);
+}
+
+.inventory-equipment-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}

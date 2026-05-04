@@ -383,7 +383,11 @@
     levelUpDraft: null,
   };
 
+  const GAME_WIDTH = 1600;
+  const GAME_HEIGHT = 900;
+
   const refs = {
+    app: document.getElementById("app"),
     screens: {
       saveList: document.getElementById("screen-save-list"),
       createTeam: document.getElementById("screen-create-team"),
@@ -449,6 +453,7 @@
   init();
 
   function init() {
+    updateGameScale();
     populateClassSelect();
     wireStaticEvents();
     if (state.saves.length) {
@@ -465,6 +470,9 @@
   }
 
   function wireStaticEvents() {
+    window.addEventListener("load", updateGameScale);
+    window.addEventListener("resize", updateGameScale);
+    window.addEventListener("orientationchange", updateGameScale);
     refs.btnNewGame.addEventListener("click", openCreateTeam);
     refs.btnLoadGame.addEventListener("click", loadSelectedSave);
     refs.btnDeleteSave.addEventListener("click", deleteSelectedSave);
@@ -490,6 +498,11 @@
     refs.modalOverlay.addEventListener("click", (event) => {
       if (event.target === refs.modalOverlay) closeModal();
     });
+  }
+
+  function updateGameScale() {
+    const scale = Math.min(window.innerWidth / GAME_WIDTH, window.innerHeight / GAME_HEIGHT);
+    refs.app.style.transform = `scale(${scale})`;
   }
 
   function uid(prefix = "id") {
