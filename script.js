@@ -473,6 +473,8 @@
     window.addEventListener("load", updateGameScale);
     window.addEventListener("resize", updateGameScale);
     window.addEventListener("orientationchange", updateGameScale);
+    window.visualViewport?.addEventListener("resize", updateGameScale);
+    window.visualViewport?.addEventListener("scroll", updateGameScale);
     refs.btnNewGame.addEventListener("click", openCreateTeam);
     refs.btnLoadGame.addEventListener("click", loadSelectedSave);
     refs.btnDeleteSave.addEventListener("click", deleteSelectedSave);
@@ -501,7 +503,11 @@
   }
 
   function updateGameScale() {
-    const scale = Math.min(window.innerWidth / GAME_WIDTH, window.innerHeight / GAME_HEIGHT) * 0.98;
+    const viewportWidth = window.visualViewport?.width || document.documentElement.clientWidth || window.innerWidth;
+    const viewportHeight = window.visualViewport?.height || document.documentElement.clientHeight || window.innerHeight;
+    const appWidth = refs.app.offsetWidth || GAME_WIDTH;
+    const appHeight = refs.app.offsetHeight || GAME_HEIGHT;
+    const scale = Math.min(viewportWidth / appWidth, viewportHeight / appHeight) * 0.94;
     refs.app.style.transform = `translate(-50%, -50%) scale(${scale})`;
   }
 
