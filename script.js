@@ -501,8 +501,8 @@
   }
 
   function updateGameScale() {
-    const scale = Math.min(window.innerWidth / GAME_WIDTH, window.innerHeight / GAME_HEIGHT);
-    refs.app.style.transform = `scale(${scale})`;
+    const scale = Math.min(window.innerWidth / GAME_WIDTH, window.innerHeight / GAME_HEIGHT) * 0.98;
+    refs.app.style.transform = `translate(-50%, -50%) scale(${scale})`;
   }
 
   function uid(prefix = "id") {

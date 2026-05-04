@@ -2438,13 +2438,15 @@ body.combat-view-active {
 .game-viewport {
   width: 100vw;
   height: 100vh;
-  display: grid;
-  place-items: center;
+  position: relative;
   overflow: hidden;
 }
 
 .app-shell,
 body.combat-view-active .app-shell {
+  position: absolute;
+  top: 50%;
+  left: 50%;
   width: 1600px;
   height: 900px;
   aspect-ratio: 16 / 9;
