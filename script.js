@@ -383,6 +383,9 @@
     levelUpDraft: null,
   };
 
+  const STAGE_WIDTH = 1920;
+  const STAGE_HEIGHT = 1080;
+
   const refs = {
     screens: {
       saveList: document.getElementById("screen-save-list"),
@@ -449,6 +452,7 @@
   init();
 
   function init() {
+    updateGameScale();
     populateClassSelect();
     wireStaticEvents();
     if (state.saves.length) {
@@ -465,6 +469,9 @@
   }
 
   function wireStaticEvents() {
+    window.addEventListener("load", updateGameScale);
+    window.addEventListener("resize", updateGameScale);
+    window.addEventListener("orientationchange", updateGameScale);
     refs.btnNewGame.addEventListener("click", openCreateTeam);
     refs.btnLoadGame.addEventListener("click", loadSelectedSave);
     refs.btnDeleteSave.addEventListener("click", deleteSelectedSave);
@@ -490,6 +497,20 @@
     refs.modalOverlay.addEventListener("click", (event) => {
       if (event.target === refs.modalOverlay) closeModal();
     });
+  }
+
+  function updateGameScale() {
+    const stage = document.querySelector(".game-stage");
+    if (!stage) return;
+
+    const viewportWidth = window.innerWidth;
+    const viewportHeight = window.innerHeight;
+    const scale = Math.min(
+      viewportWidth / STAGE_WIDTH,
+      viewportHeight / STAGE_HEIGHT
+    );
+
+    stage.style.transform = `scale(${scale})`;
   }
 
   function uid(prefix = "id") {
